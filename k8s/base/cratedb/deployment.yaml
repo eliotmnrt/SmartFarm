@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cratedb
+  namespace: fiware-platform
+  labels:
+    app: cratedb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cratedb
+  template:
+    metadata:
+      labels:
+        app: cratedb
+        version: v1
+    spec:
+      containers:
+      - name: cratedb
+        image: crate:latest
+        ports:
+        - containerPort: 4200
+          name: http
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - name: cratedb-storage
+          mountPath: /data
+        env:
+        - name: CRATE_HEAP_SIZE
+          value: "1g"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: cratedb-storage
+        persistentVolumeClaim:
+          claimName: cratedb-pvc

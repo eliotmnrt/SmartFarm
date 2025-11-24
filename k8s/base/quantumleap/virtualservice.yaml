@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: quantumleap
+  namespace: fiware-platform
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - fiware-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /quantumleap           # URL : /quantumleap/*
+    rewrite:
+      uri: /                           # Réécrire en /
+    route:
+    - destination:
+        host: quantumleap
+        port:
+          number: 8668
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: gateway-error,connect-failure,refused-stream

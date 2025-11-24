@@ -1,0 +1,7 @@
+apiVersion: v1                    # Version de l'API Kubernetes à utiliser
+kind: Namespace                   # Type d'objet : un Namespace
+metadata:                         # Métadonnées de l'objet
+  name: fiware-platform           # Nom unique du namespace
+  labels:                         # Étiquettes (key-value)
+    istio-injection: enabled      # 🔑 CRITIQUE : Active l'injection automatique Istio
+    name: fiware-platform         # Label descriptif (optionnel)

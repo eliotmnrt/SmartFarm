@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb
+  namespace: fiware-platform
+  labels:
+    app: influxdb
+spec:
+  replicas: 1                          # InfluxDB OSS ne scale pas horizontalement
+  selector:
+    matchLabels:
+      app: influxdb
+  template:
+    metadata:
+      labels:
+        app: influxdb
+        version: v2                    # InfluxDB 2.x (nouveau)
+    spec:
+      containers:
+      - name: influxdb
+        image: influxdb:2.7            # Version 2.7 (dernière stable)
+        ports:
+        - containerPort: 8086          # Port HTTP API
+          name: http
+        volumeMounts:
+        - name: influx-storage
+          mountPath: /var/lib/influxdb2  # Chemin de stockage v2
+        
+        # Variables d'environnement
+        env:
+        - name: DOCKER_INFLUXDB_INIT_MODE
+          value: "setup"               # Initialiser automatiquement
+        
+        # 🔐 Depuis le Secret
+        - name: DOCKER_INFLUXDB_INIT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-secrets   # Nom du Secret
+              key: DOCKER_INFLUXDB_INIT_USERNAME  # Clé dans le Secret
+        - name: DOCKER_INFLUXDB_INIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-secrets
+              key: DOCKER_INFLUXDB_INIT_PASSWORD
+        - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-secrets
+              key: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+        
+        # Configuration initiale
+        - name: DOCKER_INFLUXDB_INIT_ORG
+          value: "fiware"              # Organisation InfluxDB
+        - name: DOCKER_INFLUXDB_INIT_BUCKET
+          value: "iot_data"            # Bucket par défaut (= database)
+        - name: DOCKER_INFLUXDB_INIT_RETENTION
+          value: "30d"                 # Conserver les données 30 jours
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"              # InfluxDB peut consommer beaucoup de RAM
+            cpu: "1000m"
+        
+        # Probes de santé
+        livenessProbe:
+          httpGet:
+            path: /health              # Endpoint de santé InfluxDB
+            port: 8086
+          initialDelaySeconds: 60      # InfluxDB prend du temps à démarrer
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8086
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      
+      volumes:
+      - name: influx-storage
+        persistentVolumeClaim:
+          claimName: influxdb-pvc

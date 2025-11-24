@@ -1,0 +1,45 @@
+# k8s/base/iot-agent/configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-agent-config
+  namespace: fiware-platform
+data:
+  # Configuration générale
+  IOTA_LOG_LEVEL: "DEBUG"
+  
+  # Orion Context Broker
+  IOTA_CB_HOST: "orion"
+  IOTA_CB_PORT: "1026"
+  IOTA_CB_NGSI_VERSION: "v2"
+  
+  # Serveur IoT Agent
+  IOTA_NORTH_HOST: "0.0.0.0"           # ✅ Écouter sur toutes les interfaces
+  IOTA_NORTH_PORT: "4041"
+  
+  # Protocole HTTP
+  IOTA_HTTP_PORT: "7896"
+  IOTA_HTTP_HOST: "0.0.0.0"            # ✅ Écouter sur toutes les interfaces
+  
+  # MongoDB
+  IOTA_MONGO_HOST: "mongodb"
+  IOTA_MONGO_PORT: "27017"
+  IOTA_MONGO_DB: "iotagent"
+  
+  # Configuration de base
+  IOTA_PROVIDER_URL: "http://iot-agent:4041"  # URL externe pour callbacks
+  IOTA_DEFAULT_RESOURCE: "/iot/json"
+  IOTA_REGISTRY_TYPE: "mongodb"
+  
+  # Service et ServicePath par défaut
+  IOTA_DEFAULT_SERVICE: "openiot"
+  IOTA_DEFAULT_SERVICEPATH: "/"
+  
+  # Auto-provisionning
+  IOTA_AUTOCAST: "true"
+  
+  # Timestamp
+  IOTA_TIMESTAMP: "true"
+
+  IOTA_MQTT_DISABLED: "true"

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim        # Type : demande d'espace disque
+metadata:
+  name: mongodb-pvc                # Nom unique du PVC
+  namespace: fiware-platform       # Dans quel namespace
+spec:
+  accessModes:
+    - ReadWriteOnce                # RWO = Un seul nœud peut écrire
+                                   # Autres options : ReadWriteMany, ReadOnlyMany
+  resources:
+    requests:
+      storage: 3Gi                # Taille demandée : 10 Go
+  storageClassName: hostpath       # Type de stockage

@@ -1,0 +1,31 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: orion
+  namespace: fiware-platform
+spec:
+  host: orion                          # S'applique au service orion
+  
+  trafficPolicy:                       # Politiques de trafic
+    
+    # 🔌 Connection Pool
+    connectionPool:
+      tcp:
+        maxConnections: 100            # Max 100 connexions TCP simultanées
+      http:
+        http1MaxPendingRequests: 50    # Max 50 requêtes en attente (HTTP/1.1)
+        http2MaxRequests: 100          # Max 100 streams simultanés (HTTP/2)
+        maxRequestsPerConnection: 2    # Max 2 requêtes par connexion
+        # Évite le "connection reuse" excessif
+    
+    # ⚖️ Load Balancer
+    loadBalancer:
+      simple: ROUND_ROBIN              # Algorithme : tour à tour
+      # Autres : LEAST_CONN, RANDOM, PASSTHROUGH
+    
+    # 🚨 Outlier Detection (Circuit Breaker)
+    outlierDetection:
+      consecutive5xxErrors: 5             # Après 5 erreurs consécutives
+      interval: 30s                    # Période d'observation : 30s
+      baseEjectionTime: 30s            # Éjecter le pod pendant 30s
+      maxEjectionPercent: 50           # Max 50% des pods éjectés, ne jamais éjecter TOUS les pods

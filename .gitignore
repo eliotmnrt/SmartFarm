@@ -1,0 +1,22 @@
+# Secrets Kubernetes
+*.secret.yaml
+*-secret.yaml
+secret.yaml
+
+# Certificats
+*.crt
+*.key
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.tmp

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service                       # Type : Service (load balancer interne)
+metadata:
+  name: mongodb                     # Nom du service, ce nom devient un DNS : mongodb.fiware-platform.svc.cluster.local
+  namespace: fiware-platform
+  labels:
+    app: mongodb
+spec:
+  ports:
+  - port: 27017                     # Port exposé par le Service
+    targetPort: 27017               # Port du conteneur (défini dans Deployment)
+    name: mongo                     # Nom du port
+  selector:
+    app: mongodb                    # Sélectionne les Pods avec ce label
+                                    # Le Service redirige le trafic vers ces Pods
+  type: ClusterIP                   # Type de Service

@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-agent
+  namespace: fiware-platform
+  labels:
+    app: iot-agent
+spec:
+  replicas: 1                          # 2 replicas pour HA
+  selector:
+    matchLabels:
+      app: iot-agent
+  template:
+    metadata:
+      labels:
+        app: iot-agent
+        version: v1
+    spec:
+      # 🔧 InitContainers : Attendre les dépendances
+      initContainers:
+      - name: wait-for-mongodb
+        image: busybox:1.36
+        command: 
+          - 'sh'
+          - '-c'
+          - 'until nc -z mongodb 27017; do echo "waiting for mongodb"; sleep 2; done'
+      
+      - name: wait-for-orion
+        image: busybox:1.36
+        command: 
+          - 'sh'
+          - '-c'
+          - 'until nc -z orion 1026; do echo "waiting for orion"; sleep 2; done'
+      
+      containers:
+      - name: iot-agent
+        image: fiware/iotagent-json:latest
+        ports:
+        - containerPort: 4041          # API North Port (configuration)
+          name: api
+        - containerPort: 7896          # HTTP South Port (mesures)
+          name: http
+        
+        # Variables d'environnement depuis ConfigMap
+        envFrom:
+        - configMapRef:
+            name: iot-agent-config
+        
+        # 💾 Ressources
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # 🩺 Health Checks
+        livenessProbe:
+          httpGet:
+            path: /iot/about           # Endpoint de santé
+            port: 4041
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /iot/about
+            port: 4041
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+

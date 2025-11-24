@@ -1,0 +1,61 @@
+apiVersion: apps/v1                      # API pour les Deployments
+kind: Deployment                         # Type : Deployment
+metadata:
+  name: mongodb                          # Nom du Deployment
+  namespace: fiware-platform             
+  labels:
+    app: mongodb                         # Label pour identifier ce Deployment
+spec:
+  replicas: 1                            # Nombre de Pods identiques, MongoDB ne supporte pas le scaling horizontal natif
+  selector:
+    matchLabels:
+      app: mongodb                       # Sélectionne les Pods avec ce label
+  template:                              # Template du Pod à créer
+    metadata:
+      labels:
+        app: mongodb                     # Labels du Pod
+        version: v1                      # Version (pour Istio traffic splitting)
+    spec:                                # Spécification du Pod
+      containers:                        # Liste des conteneurs
+      - name: mongodb                    # Nom du conteneur
+        image: mongo:4.4                 # Image Docker à utiliser
+        ports:
+        - containerPort: 27017           # Port exposé par le conteneur
+          name: mongo                    # Nom du port (pour référence)
+        volumeMounts:                    # Montage de volumes
+        - name: mongo-storage            # Nom du volume (défini plus bas)
+          mountPath: /data/db            # Chemin dans le conteneur, MongoDB stocke ses données ici
+        resources:                       # Ressources CPU/RAM
+          requests:                      # Minimum garanti
+            memory: "512Mi"              # 512 Mo de RAM
+            cpu: "250m"                  # 0.25 CPU (1000m = 1 CPU)
+          limits:                        # Maximum autorisé
+            memory: "1Gi"                # 1 Go de RAM max
+            cpu: "500m"                  # 0.5 CPU max
+        
+        # 🔍 Probes : Vérifications de santé
+        livenessProbe:                   # "Est-ce que le conteneur est vivant ?"
+          exec:
+            command:
+            - mongo                      # Exécute la commande mongo
+            - --eval                     
+            - "db.adminCommand('ping')"  # Ping MongoDB
+          initialDelaySeconds: 30        # Attendre 30s avant le 1er check
+          periodSeconds: 10              # Vérifier toutes les 10s
+          timeoutSeconds: 5              # Timeout de 5s
+          failureThreshold: 3            # Redémarrer après 3 échecs
+        
+        readinessProbe:                  # "Est-ce que le conteneur est prêt ?"
+          exec:                          # (accepter du trafic)
+            command:
+            - mongo
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 10        # Premier check après 10s
+          periodSeconds: 5               # Vérifier toutes les 5s
+          timeoutSeconds: 3              
+      
+      volumes:                           # Définition des volumes
+      - name: mongo-storage              # Nom du volume
+        persistentVolumeClaim:
+          claimName: mongodb-pvc         # Utilise le PVC créé précédemment

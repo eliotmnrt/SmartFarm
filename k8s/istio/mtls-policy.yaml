@@ -1,0 +1,12 @@
+# k8s/istio/mtls-policy.yaml
+
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: fiware-platform
+spec:
+  mtls:
+    mode: PERMISSIVE                 # PERMISSIVE = mTLS optionnel
+                                     # STRICT = mTLS obligatoire
+                                     # DISABLE = pas de mTLS

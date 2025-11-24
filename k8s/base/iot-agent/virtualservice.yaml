@@ -1,0 +1,39 @@
+# k8s/base/iot-agent/virtualservice.yaml
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: iot-agent
+  namespace: fiware-platform
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - fiware-gateway
+  http:
+  # Route 1 : API de configuration (North Port)
+  - match:
+    - uri:
+        prefix: /iot                   # /iot/devices, /iot/services, etc.
+    route:
+    - destination:
+        host: iot-agent
+        port:
+          number: 4041                 # Vers le port API
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+  
+  # Route 2 : Réception des mesures (South Port)
+  - match:
+    - uri:
+        prefix: /measurements          # URL pour les capteurs
+    rewrite:
+      uri: /iot/json                   # Réécrire vers le resource path
+    route:
+    - destination:
+        host: iot-agent
+        port:
+          number: 7896                 # Vers le port HTTP
+    timeout: 10s

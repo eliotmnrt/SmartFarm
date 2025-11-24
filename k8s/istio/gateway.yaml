@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: fiware-gateway
+  namespace: fiware-platform
+spec:
+  selector:
+    istio: ingressgateway            # Utilise l'ingress gateway d'Istio
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"                            # Accepte tous les hôtes
+    # En production, spécifier : ["iot.example.com", "api.example.com"]

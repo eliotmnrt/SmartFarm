@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quantumleap-config
+  namespace: fiware-platform
+data:
+  # Niveau de logs
+  LOGLEVEL: "INFO"
+  
+  # CrateDB (backend par défaut, pas besoin de config spéciale)
+  CRATE_HOST: "cratedb"
+  CRATE_PORT: "4200"
+  
+  # Options générales
+  USE_GEOCODING: "True"
+  CACHE_QUERIES: "True"
+  QL_DEFAULT_LIMIT: "10000"

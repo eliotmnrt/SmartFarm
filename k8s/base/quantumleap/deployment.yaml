@@ -1,0 +1,99 @@
+# k8s/base/quantumleap/deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantumleap
+  namespace: fiware-platform
+  labels:
+    app: quantumleap
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: quantumleap
+  template:
+    metadata:
+      labels:
+        app: quantumleap
+        version: v1
+    spec:
+      initContainers:
+      - name: wait-for-cratedb
+        image: busybox:1.36
+        command: 
+          - 'sh'
+          - '-c'
+          - 'until nc -z cratedb 4200; do echo "waiting for cratedb"; sleep 2; done'
+      
+      - name: wait-for-mongodb
+        image: busybox:1.36
+        command: 
+          - 'sh'
+          - '-c'
+          - 'until nc -z mongodb 27017; do echo "waiting for mongodb"; sleep 2; done'
+      
+      - name: wait-for-orion
+        image: busybox:1.36
+        command: 
+          - 'sh'
+          - '-c'
+          - 'until nc -z orion 1026; do echo "waiting for orion"; sleep 2; done'
+      
+      containers:
+      - name: quantumleap
+        image: orchestracities/quantumleap:latest
+        ports:
+        - containerPort: 8668
+          name: http
+        
+        env:
+        # CrateDB Configuration
+        - name: CRATE_HOST
+          value: "cratedb"
+        
+        - name: CRATE_PORT
+          value: "4200"
+        
+        # Orion Configuration
+        - name: ORION_URL
+          value: "http://orion:1026"
+        
+        # Options générales
+        - name: USE_GEOCODING
+          value: "True"
+        
+        - name: LOGLEVEL
+          value: "INFO"
+        
+        - name: CACHE_QUERIES
+          value: "True"
+        
+        - name: QL_DEFAULT_LIMIT
+          value: "10000"
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8668
+          initialDelaySeconds: 90
+          periodSeconds: 60
+          timeoutSeconds: 15
+          failureThreshold: 5
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8668
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5

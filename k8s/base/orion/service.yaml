@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: orion                          # DNS : orion.fiware-platform.svc.cluster.local
+  namespace: fiware-platform
+  labels:
+    app: orion
+spec:
+  ports:
+  - port: 1026                         # Port du Service
+    targetPort: 1026                   # Port du conteneur
+    name: http                         # Nom du port (requis par Istio)
+  selector:
+    app: orion                         # Redirige vers les Pods avec ce label
+  type: ClusterIP                      # Interne au cluster
