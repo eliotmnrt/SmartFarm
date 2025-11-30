@@ -36,10 +36,11 @@ data:
   IOTA_DEFAULT_SERVICE: "openiot"
   IOTA_DEFAULT_SERVICEPATH: "/"
   
-  # Auto-provisionning
-  IOTA_AUTOCAST: "true"
-  
   # Timestamp
   IOTA_TIMESTAMP: "true"
 
   IOTA_MQTT_DISABLED: "true"
+
+  IOTA_DEFAULT_ENTITY_TYPE: "Sensor"
+  IOTA_DEFAULT_ENTITY_NAME: "Sensor"
+  IOTA_MAPPING_IGNORE: "false"
