@@ -48,6 +48,11 @@ echo -e "${BLUE}[5/5]${NC} Démarrage de l'IoT Agent..."
 kubectl scale deployment iot-agent --replicas=1 -n $NAMESPACE
 wait_for_pods "iot-agent" 1
 
+# Démarrer Grafana
+echo -e "${BLUE}[6/5]${NC} Démarrage de Grafana..."
+kubectl scale deployment grafana --replicas=1 -n $NAMESPACE
+wait_for_pods "grafana" 1
+
 
 echo ""
 echo -e "${GREEN}✅ Plateforme démarrée avec succès !${NC}"

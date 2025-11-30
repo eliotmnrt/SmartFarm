@@ -54,33 +54,25 @@ echo -e "${BLUE}[6/6]${NC} Déploiement de l'IoT Agent..."
 kubectl apply -f k8s/base/iot-agent/
 wait_for_pods "iot-agent"
 
-# Créer la subscription Orion -> QuantumLeap
-curl -X POST http://localhost:1026/v2/subscriptions \
-  -H 'Content-Type: application/json' \
-  -H 'fiware-service: openiot' \
-  -H 'fiware-servicepath: /' \
-  -d '{
-  "description": "Notify QuantumLeap of all sensor changes",
-  "subject": {
-    "entities": [
-      {
-        "idPattern": ".*",
-        "type": "Sensor"
-      }
-    ],
-    "condition": {
-      "attrs": []
-    }
-  },
-  "notification": {
-    "http": {
-      "url": "http://quantumleap:8668/v2/notify"
-    },
-    "attrs": [],
-    "metadata": ["dateCreated", "dateModified"]
-  },
-  "throttling": 1
-}'
+#7. Grafana pod
+echo -e "${BLUE}[7/6]${NC} Création de l'utilisateur Grafana..."
+kubectl apply -f k8s/base/grafana/
+wait_for_pods "grafana"
+
+
+# Port-forwards
+
+
+
+# Installer Prometheus
+kubectl apply -f ~/istio/istio-1.28.0/samples/addons/prometheus.yaml
+
+# Installer Grafana
+kubectl apply -f ~/istio/istio-1.28.0/samples/addons/grafana.yaml
+
+# Installer Kiali
+kubectl apply -f ~/istio/istio-1.28.0/samples/addons/kiali.yaml
+wait_for_pods "kiali"
 
 echo ""
 echo -e "${GREEN}✅ Redéploiement terminé !${NC}"
