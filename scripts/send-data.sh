@@ -9,7 +9,7 @@ NC='\033[0m'
 
 NAMESPACE="fiware-platform"
 
-echo -e "${BLUE}í³¡ Simulation de Capteur IoT${NC}"
+echo -e "${BLUE}ï¿½ï¿½ï¿½ Simulation de Capteur IoT${NC}"
 
 kubectl port-forward -n $NAMESPACE svc/iot-agent 7896:7896 > /dev/null 2>&1 &
 PF=$!

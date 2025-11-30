@@ -9,7 +9,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 echo -e "${RED}╔════════════════════════════════════════════╗${NC}"
-echo -e "${RED}║  ��� Correction Entity Name (Definitif)   ║${NC}"
+echo -e "${RED}║  ��� Correction Entity Name (Definitif)   ║${NC}"
 echo -e "${RED}╚════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -82,7 +82,7 @@ fi
 echo -e "${GREEN}✅ Service créé${NC}"
 
 echo -e "${YELLOW}[6/10] Provisioning device CORRECT...${NC}"
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:4041/iot/devices \
+RESPONSE=$(curl -s -w -X POST http://localhost:4041/iot/devices \
   -H 'Content-Type: application/json' \
   -H 'fiware-service: openiot' \
   -H 'fiware-servicepath: /' \
@@ -173,7 +173,7 @@ else
 fi
 
 echo -e "${YELLOW}[9/10] Test mesure...${NC}"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+HTTP_CODE=$(curl -s -o /dev/null -w \
   -X POST "http://localhost:7896/iot/json?k=4jggokgpepnvsb2uv4s40d59ov&i=sensor001" \
   -H 'Content-Type: application/json' \
   -d '{"t": 23.5, "h": 65, "p": 1013}')
@@ -223,7 +223,7 @@ curl -s -X POST http://localhost:1026/v2/subscriptions \
 
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║  ��� PROBLÈME RÉSOLU DÉFINITIVEMENT !     ║${NC}"
+echo -e "${GREEN}║  ��� PROBLÈME RÉSOLU DÉFINITIVEMENT !     ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${BLUE}Test :${NC}"
