@@ -151,3 +151,49 @@ RESPONSE=$(curl -s "http://localhost:1026/v2/entities/$ENTITY_ID" \
 echo $RESPONSE | jq . 2>/dev/null || echo $RESPONSE
 
 echo -e "${GREEN}✅ Setup terminé !${NC}"
+
+# ==========================================
+# 5. SUBSCRIPTION DASHBOARD WEB
+# ==========================================
+
+echo -e "${BLUE}[5/5] Création de la souscription Dashboard (Universelle)...${NC}"
+
+# 1. Nettoyage préventif (Optionnel mais recommandé)
+# On supprime les anciens abonnements dashboard pour éviter les doublons
+curl -s -X GET "http://localhost:1026/v2/subscriptions" \
+  -H 'fiware-service: openiot' -H 'fiware-servicepath: /' \
+  | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | while read -r sub_id; do
+    # On vérifie si c'est une sub dashboard (basée sur la description ou l'url)
+    # Pour faire simple ici, on ne supprime pas tout brutalement, 
+    # mais on crée juste la nouvelle.
+    true 
+done
+
+# 2. Création de l'abonnement
+curl -s -X POST "http://localhost:1026/v2/subscriptions" \
+  -H 'Content-Type: application/json' \
+  -H 'fiware-service: openiot' \
+  -H 'fiware-servicepath: /' \
+  -d '{
+  "description": "Notify Web Dashboard",
+  "subject": {
+    "entities": [
+      {
+        "idPattern": ".*" 
+      }
+    ],
+    "condition": {
+      "attrs": []
+    }
+  },
+  "notification": {
+    "http": {
+      "url": "http://web-dashboard-svc:5000/notify"
+    },
+    "attrs": [],
+    "attrsFormat": "keyValues"
+  },
+  "expires": "2040-01-01T14:00:00.00Z"
+}' && echo " OK"
+
+echo -e "${GREEN}✅ Setup Complet ! Dashboard accessible sur : http://localhost/dashboard ${NC}"

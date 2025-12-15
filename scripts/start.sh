@@ -48,6 +48,16 @@ echo -e "${BLUE}[5/5]${NC} Démarrage de l'IoT Agent..."
 kubectl scale deployment iot-agent --replicas=1 -n $NAMESPACE
 wait_for_pods "iot-agent" 1
 
+# Démarrer Web Dashboard
+echo -e "${BLUE}[6/6]${NC} Démarrage du Web Dashboard..."
+# On s'assure que le déploiement existe avant de scaler
+if kubectl get deployment web-dashboard -n $NAMESPACE > /dev/null 2>&1; then
+    kubectl scale deployment web-dashboard --replicas=1 -n $NAMESPACE
+    wait_for_pods "web-dashboard" 1
+else
+    echo -e "${YELLOW}   ⚠️ Déploiement web-dashboard non trouvé (Lancez redeploy.sh d'abord)${NC}"
+fi
+
 # Démarrer Grafana
 echo -e "${BLUE}[6/5]${NC} Démarrage de Grafana..."
 kubectl scale deployment grafana --replicas=1 -n $NAMESPACE
