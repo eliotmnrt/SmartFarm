@@ -23,7 +23,7 @@ spec:
             - containerPort: 8888
           env:
             - name: WEATHER_APIS_CONFIG
-              value: '[{"type": "script", "name": "LocalScript-Primary", "path": "/opt/scripts/weather-data.sh"}, {"type": "openweathermap", "name": "OpenWeatherMap-Fallback", "key": "8baf77cc0c343cda4b0439bfbe663f3d"}, {"type": "openmeteo", "name": "OpenMeteo-Fallback"}]'
+              value: '[{"type": "script", "name": "LocalScript-Primary", "path": "/opt/scripts/weather-data.sh"}, {"type": "openmeteo", "name": "Open-Meteo-Fallback"}]'
             - name: ORION_URL
               value: "http://orion:1026/v2/entities"
             - name: PORT
@@ -35,8 +35,20 @@ spec:
           command: ["sh", "-c"]
           args:
             - pip install --no-cache-dir flask requests && python /opt/scripts/weather_agent.py
+          livenessProbe:  
+            httpGet:  
+              path: /health  
+              port: 8888  
+            initialDelaySeconds: 30  
+            periodSeconds: 10  
+          readinessProbe:  
+            httpGet:  
+              path: /health  
+              port: 8888  
+            initialDelaySeconds: 10  
+            periodSeconds: 5
       volumes:
         - name: scripts
           configMap:
             name: weather-agent-scripts
-            defaultMode: 0o755
+            defaultMode: 0755

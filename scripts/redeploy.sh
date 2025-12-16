@@ -21,47 +21,47 @@ wait_for_pods() {
 
 # 1. Namespace
 echo -e "${BLUE}[1/9]${NC} Création du namespace..."
-kubectl apply -f ../k8s/base/namespace.yaml
+kubectl apply -f k8s/base/namespace.yaml
 sleep 2
 
 # 2. Istio
 echo -e "${BLUE}[2/9]${NC} Déploiement des Services Istio..."
-kubectl apply -f ../k8s/istio/
+kubectl apply -f k8s/istio/
 sleep 10
 
 # 3. MongoDB
 echo -e "${BLUE}[3/9]${NC} Déploiement de MongoDB..."
-kubectl apply -f ../k8s/base/mongodb/
+kubectl apply -f k8s/base/mongodb/
 wait_for_pods "mongodb"
 
 # 4. Cratedb
 echo -e "${BLUE}[4/9]${NC} Déploiement de Cratedb..."
-kubectl apply -f ../k8s/base/cratedb/
+kubectl apply -f k8s/base/cratedb/
 wait_for_pods "cratedb"
 
 # 5. Orion
 echo -e "${BLUE}[5/9]${NC} Déploiement d'Orion..."
-kubectl apply -f ../k8s/base/orion/
+kubectl apply -f k8s/base/orion/
 wait_for_pods "orion"
 
 # 6. QuantumLeap
 echo -e "${BLUE}[6/9]${NC} Déploiement de QuantumLeap..."
-kubectl apply -f ../k8s/base/quantumleap/
+kubectl apply -f k8s/base/quantumleap/
 wait_for_pods "quantumleap"
 
 # 7. IoT Agent
 echo -e "${BLUE}[7/9]${NC} Déploiement de l'IoT Agent..."
-kubectl apply -f ../k8s/base/iot-agent/
+kubectl apply -f k8s/base/iot-agent/
 wait_for_pods "iot-agent"
 
 # 8. Weather Agent
 echo -e "${BLUE}[8/9]${NC} Déploiement du Weather Agent..."
-kubectl apply -f ../k8s/base/weather-agent/
+kubectl apply -f k8s/base/weather-agent/
 wait_for_pods "weather-agent"
 
 # 9. Grafana pod
 echo -e "${BLUE}[9/9]${NC} Création de l'utilisateur Grafana..."
-kubectl apply -f ../k8s/base/grafana/
+kubectl apply -f k8s/base/grafana/
 wait_for_pods "grafana"
 
 

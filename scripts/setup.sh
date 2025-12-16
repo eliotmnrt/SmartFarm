@@ -41,7 +41,7 @@ kubectl port-forward -n $NAMESPACE $POD_GRAFANA 3000:3000 > /dev/null 2>&1 &
 # Weather agent port-forward (if present)
 POD_WEATHER=$(kubectl get pod -n $NAMESPACE -l app=weather-agent -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
 if [ -n "$POD_WEATHER" ]; then
-  kubectl port-forward -n $NAMESPACE $POD_WEATHER 8080:8080 > /dev/null 2>&1 &
+  kubectl port-forward -n $NAMESPACE $POD_WEATHER 8888:8888 > /dev/null 2>&1 &
   PID_WEATHER=$!
 fi
 
@@ -55,7 +55,7 @@ echo "   - IoT Agent (Config): 4041 ($PID_IOTA_NORTH)"
 echo "   - IoT Agent (Data): 7896 ($PID_IOTA_SOUTH)"
 echo "   - QuantumLeap: 8668 ($PID_QL)"
 if [ -n "$PID_WEATHER" ]; then
-  echo "   - Weather Agent: 8080 ($PID_WEATHER)"
+  echo "   - Weather Agent: 8888 ($PID_WEATHER)"
 fi
 
 echo -e "${YELLOW}⏳ Attente de 5s pour la stabilisation...${NC}"
