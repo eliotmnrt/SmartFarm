@@ -4,15 +4,14 @@
 
 **Features:**
 - Local script execution (primary) with automatic fallback
-- Multiple weather provider support (OpenWeatherMap, Open-Meteo as fallback)
+- Weather provider support (Open-Meteo fallback)
 - Automatic fallback when one provider fails
 - Configurable API chain for redundancy
 - Traces which provider was used in the Orion entity (`data_provider`)
 
 **Current Configuration:**
 1. **Primary:** Local script (`/opt/scripts/weather-data.sh`) - generates simulated weather data
-2. **Fallback 1:** OpenWeatherMap API
-3. **Fallback 2:** Open-Meteo API (free, no key needed)
+2. **Fallback:** Open-Meteo API (free, no key needed)
 
 Deployment files:
 - `k8s/base/weather-agent/configmap.yaml` - contains `weather_agent.py`, `weather_providers.py`, and `weather-data.sh` scripts
@@ -34,8 +33,7 @@ Customizing Weather Providers:
 ```yaml
 WEATHER_APIS_CONFIG: '[
   {"type": "script", "name": "LocalScript-Primary", "path": "/opt/scripts/weather-data.sh"},
-  {"type": "openweathermap", "name": "OpenWeatherMap-Fallback", "key": "YOUR_KEY"},
-  {"type": "openmeteo", "name": "OpenMeteo-Fallback"}
+  {"type": "openmeteo", "name": "Open-Meteo-Fallback"}
 ]'
 ```
 
@@ -44,14 +42,12 @@ To update the configuration:
 kubectl set env deployment/weather-agent -n fiware-platform \
   WEATHER_APIS_CONFIG='[
     {"type": "script", "name": "MyScript", "path": "/opt/scripts/my-weather.sh"},
-    {"type": "openweathermap", "name": "OWM", "key": "YOUR_OWM_KEY"},
-    {"type": "openmeteo", "name": "OpenMeteo"}
+    {"type": "openmeteo", "name": "Open-Meteo"}
   ]'
 ```
 
 **Supported Providers:**
 - `script` - Local script execution (no requirements, primary in current setup)
-- `openweathermap` - OpenWeatherMap API (requires API key)
 - `openmeteo` - Open-Meteo API (free, no key needed)
 - `custom` - Custom HTTP endpoint (requires URL)
 

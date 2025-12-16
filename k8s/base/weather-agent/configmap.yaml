@@ -28,46 +28,6 @@ data:
             """Get weather data for coordinates. Returns dict with keys: temp, humidity, wind_speed, forecast"""
             raise NotImplementedError
 
-    class OpenWeatherMapProvider(WeatherProvider):
-        """OpenWeatherMap API provider"""
-        
-        def __init__(self, api_key: str, name: str = "OpenWeatherMap"):
-            self.api_key = api_key
-            self.name = name
-            if not api_key:
-                raise ValueError(f"{name}: API key not configured")
-        
-        def get_weather(self, lat: float, lon: float) -> Dict:
-            try:
-                params = {
-                    'lat': lat,
-                    'lon': lon,
-                    'exclude': 'minutely,hourly,alerts',
-                    'appid': self.api_key,
-                    'units': 'metric'
-                }
-                r = requests.get('https://api.openweathermap.org/data/2.5/onecall', 
-                               params=params, timeout=15)
-                r.raise_for_status()
-                ow = r.json()
-                
-                current = ow.get('current', {})
-                daily = ow.get('daily', [])
-                
-                return {
-                    'temp': current.get('temp'),
-                    'humidity': current.get('humidity'),
-                    'wind_speed': current.get('wind_speed'),
-                    'pressure': current.get('pressure'),
-                    'description': current.get('weather', [{}])[0].get('description', 'N/A'),
-                    'forecast': daily,
-                    'raw': ow,
-                    'provider': self.name
-                }
-            except Exception as e:
-                log.warning(f'{self.name}: {str(e)}')
-                raise
-
     class OpenMeteoProvider(WeatherProvider):
         """Open-Meteo API provider (free, no API key needed)"""
         
@@ -98,37 +58,6 @@ data:
                     'pressure': current.get('pressure_msl'),
                     'description': f"Code {current.get('weather_code')}",
                     'forecast': daily,
-                    'raw': data,
-                    'provider': self.name
-                }
-            except Exception as e:
-                log.warning(f'{self.name}: {str(e)}')
-                raise
-
-    class CustomAPIProvider(WeatherProvider):
-        """Custom API provider - calls an external HTTP endpoint"""
-        
-        def __init__(self, api_url: str, name: str = "CustomAPI"):
-            self.api_url = api_url
-            self.name = name
-            if not api_url:
-                raise ValueError(f"{name}: API URL not configured")
-        
-        def get_weather(self, lat: float, lon: float) -> Dict:
-            try:
-                response = requests.post(self.api_url, 
-                                       json={'lat': lat, 'lon': lon},
-                                       timeout=15)
-                response.raise_for_status()
-                data = response.json()
-                
-                return {
-                    'temp': data.get('temp'),
-                    'humidity': data.get('humidity'),
-                    'wind_speed': data.get('wind_speed'),
-                    'pressure': data.get('pressure'),
-                    'description': data.get('description', 'N/A'),
-                    'forecast': data.get('forecast', []),
                     'raw': data,
                     'provider': self.name
                 }
@@ -211,47 +140,34 @@ data:
                     api_type = api.get('type', '').lower()
                     name = api.get('name', api_type)
                     
-                    if api_type == 'openweathermap':
-                        key = api.get('key') or os.environ.get('OPENWEATHER_API_KEY')
-                        if key:
-                            providers.append(OpenWeatherMapProvider(key, name))
-                    
-                    elif api_type == 'openmeteo':
-                        providers.append(OpenMeteoProvider(name))
-                    
-                    elif api_type == 'custom':
-                        url = api.get('url') or os.environ.get('CUSTOM_WEATHER_API_URL')
-                        if url:
-                            providers.append(CustomAPIProvider(url, name))
-                    
-                    elif api_type == 'script':
-                        path = api.get('path') or os.environ.get('WEATHER_SCRIPT_PATH')
-                        if path:
-                            providers.append(ScriptProvider(path, name))
+                    try:
+                        if api_type == 'openmeteo':
+                            providers.append(OpenMeteoProvider(name))
+                        
+                        elif api_type == 'script':
+                            path = api.get('path') or os.environ.get('WEATHER_SCRIPT_PATH')
+                            if path:
+                                providers.append(ScriptProvider(path, name))
+                    except Exception as e:
+                        log.warning(f'Skipping provider {name}: {e}')
+                        continue
             except Exception as e:
                 log.warning(f'Failed to parse WEATHER_APIS_CONFIG: {e}')
         
         # Fallback: single provider from environment variables
         if not providers:
-            provider_type = os.environ.get('WEATHER_PROVIDER', 'openweathermap').lower()
+            provider_type = os.environ.get('WEATHER_PROVIDER', 'openmeteo').lower()
             
-            if provider_type == 'openweathermap':
-                api_key = os.environ.get('OPENWEATHER_API_KEY')
-                if api_key:
-                    providers.append(OpenWeatherMapProvider(api_key))
-            
-            elif provider_type == 'openmeteo':
-                providers.append(OpenMeteoProvider())
-            
-            elif provider_type == 'custom':
-                api_url = os.environ.get('CUSTOM_WEATHER_API_URL')
-                if api_url:
-                    providers.append(CustomAPIProvider(api_url))
-            
-            elif provider_type == 'script':
-                script_path = os.environ.get('WEATHER_SCRIPT_PATH')
-                if script_path:
-                    providers.append(ScriptProvider(script_path))
+            try:
+                if provider_type == 'openmeteo':
+                    providers.append(OpenMeteoProvider())
+                
+                elif provider_type == 'script':
+                    script_path = os.environ.get('WEATHER_SCRIPT_PATH')
+                    if script_path:
+                        providers.append(ScriptProvider(script_path))
+            except Exception as e:
+                log.warning(f'Failed to create fallback provider: {e}')
         
         if not providers:
             raise ValueError('No weather providers configured')
@@ -316,16 +232,27 @@ data:
                 'data_provider': {'value': provider_used}
             }
 
-            headers = {'Content-Type': 'application/json'}
+            headers = {
+                'Content-Type': 'application/json',
+                'fiware-service': 'openiot',
+                'fiware-servicepath': '/'
+            }
             r = requests.post(ORION_URL + '?options=upsert', 
                             headers=headers, 
                             data=json.dumps(orion_payload), 
                             timeout=10)
+            r.raise_for_status()
 
             return jsonify({
                 'orion_status': r.status_code, 
                 'provider': provider_used,
-                'weather': weather_data.get('raw', weather_data)
+                'weather': {
+                    'temp': weather_data.get('temp'),
+                    'humidity': weather_data.get('humidity'),
+                    'wind_speed': weather_data.get('wind_speed'),
+                    'pressure': weather_data.get('pressure'),
+                    'description': weather_data.get('description')
+                }
             }), 200
 
         except Exception as e:

@@ -11,7 +11,7 @@ NC='\033[0m'
 NAMESPACE="fiware-platform"
 
 echo -e "${BLUE}🌤️  Test du Weather Agent avec fallback${NC}"
-echo -e "${YELLOW}Config: Local Script → OpenWeatherMap → Open-Meteo${NC}"
+echo -e "${YELLOW}Config: Local Script → Open-Meteo${NC}"
 echo ""
 
 # Port-forward vers le Weather Agent
@@ -75,11 +75,4 @@ while true; do
     
     echo ""
     sleep 10
-done
-    echo ""
-    
-    # Attendre 10 minutes (600s) avant la prochaine requête
-    # OpenWeatherMap API gratuite limite à 60 appels/minute
-    # Pour des tests plus rapides, réduisez cette valeur
-    sleep 600
 done

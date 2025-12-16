@@ -76,7 +76,6 @@ start_port_forwards() {
         ALL_PIDS+=($!)
         echo "   - Weather Agent: 8888 (PID: $!)"})"
     fi
-
     # Stocker tous les PIDs dans un fichier temporaire
     echo "${ALL_PIDS[@]}" > "$PID_FILE"
     
