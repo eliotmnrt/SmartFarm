@@ -6,8 +6,8 @@
 NAMESPACE="fiware-platform"
 API_KEY="4jggokgpepnvsb2uv4s40d59ov"
 DEVICE_ID="sensor001"
-ENTITY_ID="urn:ngsi-ld:Sensor:001"
-ENTITY_TYPE="Sensor"
+ENTITY_ID="urn:ngsi-ld:Cluster:cluster_1"
+ENTITY_TYPE="Cluster"
 
 # Couleurs pour le terminal
 GREEN='\033[0;32m'
@@ -22,33 +22,12 @@ echo -e "${BLUE}🚀 Initialisation de la configuration FIWARE (Fresh Setup)...$
 # ==========================================
 echo -e "${YELLOW}🔌 Mise en place des tunnels (Port-Forwarding)...${NC}"
 
-# Récupération dynamique des noms de pods
-POD_ORION=$(kubectl get pod -n $NAMESPACE -l app=orion -o jsonpath="{.items[0].metadata.name}")
-POD_IOTA=$(kubectl get pod -n $NAMESPACE -l app=iot-agent -o jsonpath="{.items[0].metadata.name}")
-POD_QL=$(kubectl get pod -n $NAMESPACE -l app=quantumleap -o jsonpath="{.items[0].metadata.name}")
-POD_GRAFANA=$(kubectl get pod -n $NAMESPACE -l app=grafana -o jsonpath="{.items[0].metadata.name}")
+./scripts/portManager.sh stop
 
-# Lancement des tunnels en arrière-plan
-kubectl port-forward -n $NAMESPACE $POD_ORION 1026:1026 > /dev/null 2>&1 &
-PID_ORION=$!
-kubectl port-forward -n $NAMESPACE $POD_IOTA 4041:4041 > /dev/null 2>&1 &
-PID_IOTA_NORTH=$!
-kubectl port-forward -n $NAMESPACE $POD_IOTA 7896:7896 > /dev/null 2>&1 &
-PID_IOTA_SOUTH=$!
-#grafana port
-kubectl port-forward -n $NAMESPACE $POD_GRAFANA 3000:3000 > /dev/null 2>&1 &
+./scripts/portManager.sh start $NAMESPACE
 
 
-# Optionnel : Tunnel vers QL pour vérifier l'API directement si besoin
-kubectl port-forward -n $NAMESPACE $POD_QL 8668:8668 > /dev/null 2>&1 &
-PID_QL=$!
-
-echo "   - Orion: 1026 ($PID_ORION)"
-echo "   - IoT Agent (Config): 4041 ($PID_IOTA_NORTH)"
-echo "   - IoT Agent (Data): 7896 ($PID_IOTA_SOUTH)"
-echo "   - QuantumLeap: 8668 ($PID_QL)"
-
-echo -e "${YELLOW}⏳ Attente de 5s pour la stabilisation...${NC}"
+echo -e "⏳ Attente de 5s pour la stabilisation...${NC}"
 sleep 5
 
 # ==========================================
@@ -72,31 +51,92 @@ curl -s -X POST "http://localhost:4041/iot/services" \
  ]
 }' && echo " OK"
 
-echo -e "${BLUE}[2/4] Création du Device (Mapping Explicite)...${NC}"
-# ⚠️ CRITIQUE : On inclut "apikey" ICI pour lier fermement ce device au groupe
-# et éviter la création d'un doublon par défaut.
-curl -s -X POST "http://localhost:4041/iot/devices" \
-  -H 'Content-Type: application/json' \
-  -H 'fiware-service: openiot' \
-  -H 'fiware-servicepath: /' \
-  -d '{
- "devices": [
-   {
-     "device_id": "'$DEVICE_ID'",
-     "apikey": "'$API_KEY'",
-     "entity_name": "'$ENTITY_ID'",
-     "entity_type": "'$ENTITY_TYPE'",
-     "protocol": "IoTA-JSON",
-     "transport": "HTTP",
-     "endpoint": "http://iot-agent:7896/iot/json",
-     "attributes": [
-       {"object_id": "t", "name": "temperature", "type": "Number"},
-       {"object_id": "h", "name": "humidity", "type": "Number"},
-       {"object_id": "p", "name": "pressure", "type": "Number"}
-     ]
-   }
- ]
-}' && echo " OK"
+echo -e "${BLUE}[2/4] Création des Devices (Mapping Explicite)...${NC}"
+
+# ... (Partie 2 avant la boucle)
+
+echo -e "${BLUE}[2/4] Création des Devices (Mapping Explicite)...${NC}"
+
+
+KM_PER_DEG_LAT=110.574 # ~ 1 degré de latitude en km
+KM_PER_DEG_LON=77.200  # ~ 1 degré de longitude en km à 46.19° de latitude (Approximation)
+
+# Coordonnées de référence pour le calcul GPS (Origine)
+LAT_ORIGIN=46.194814
+LON_ORIGIN=1.190861
+
+calculate_gps_long() {
+    local DX=$1 # Déplacement en X (Longitude)
+    local NEW_LON=$(awk "BEGIN {print $LON_ORIGIN + ($DX / $KM_PER_DEG_LON)}")
+    echo "$NEW_LON"
+}
+
+calculate_gps_lat() {
+    local DY=$1 # Déplacement en Y (Latitude)
+    local NEW_LAT=$(awk "BEGIN {print $LAT_ORIGIN + ($DY / $KM_PER_DEG_LAT)}")
+    echo "$NEW_LAT"
+}
+
+for i in $(seq -f "%02g" 1 10); do
+  DEVICE_ID="cluster_$i"
+  echo "Enregistrement de $DEVICE_ID..."
+
+  case $i in
+    01) X=8; Y=32 ;;
+    02) X=33; Y=26 ;;
+    03) X=44; Y=19 ;;
+    04) X=63; Y=30 ;;
+    05) X=91; Y=28 ;;
+    06) X=2; Y=82 ;;
+    07) X=35; Y=70 ;;
+    08) X=45; Y=70 ;;
+    09) X=67; Y=75 ;;
+    10) X=89; Y=72 ;;
+    *) X=0; Y=0 ;;
+  esac
+
+  LON=$(calculate_gps_long $X)
+  LAT=$(calculate_gps_lat $Y)
+
+  echo -n "  -> Localisation (X: $LON, Y: $LAT  )..."
+
+
+  curl -s -X POST "http://localhost:4041/iot/devices" \
+    -H 'Content-Type: application/json' \
+    -H 'fiware-service: openiot' \
+    -H 'fiware-servicepath: /' \
+    -d '{
+    "devices": [
+      {
+        "device_id": "'"$DEVICE_ID"'",
+        "apikey": "'"$API_KEY"'",
+        "entity_name": "urn:ngsi-ld:Cluster:'"$DEVICE_ID"'",
+        "entity_type": "'"$ENTITY_TYPE"'",
+        "protocol": "IoTA-JSON",
+        "transport": "HTTP",
+        "endpoint": "http://iot-agent:7896/iot/json",
+        "attributes": [
+          {"object_id": "date", "name": "TimeInstant", "type": "DateTime"},
+          {"object_id": "ta", "name": "temperature", "type": "Number"},
+          {"object_id": "ts", "name": "soilTemperature", "type": "Number"},
+          {"object_id": "ha", "name": "humidity", "type": "Number"},
+          {"object_id": "hs", "name": "soilMoisture", "type": "Number"},
+          {"object_id": "n",  "name": "n", "type": "Number"},
+          {"object_id": "p",  "name": "p", "type": "Number"},
+          {"object_id": "k",  "name": "k", "type": "Number"},
+          {"object_id": "ph", "name": "ph", "type": "Number"}
+        ],
+        "static_attributes": [
+          {"name": "longitude", "type": "Number", "value": "'"$LON"'"}, 
+          {"name": "latitude", "type": "Number", "value": "'"$LAT"'"}
+        ]
+      }
+    ]
+  }'
+  
+  echo " OK" 
+done 
+
 
 # ==========================================
 # 3. SUBSCRIPTION QUANTUMLEAP
@@ -129,25 +169,16 @@ curl -s -X POST "http://localhost:1026/v2/subscriptions" \
     "metadata": ["dateCreated", "dateModified"]
   },
   "throttling": 1
-}' && echo " OK"
-
-# ==========================================
-# 4. TEST ET VÉRIFICATION
-# ==========================================
-
-echo -e "${BLUE}[4/4] Envoi de données de test...${NC}"
-curl -s -X POST "http://localhost:7896/iot/json?k=$API_KEY&i=$DEVICE_ID" \
-  -H 'Content-Type: application/json' \
-  -d '{"t": 24.5, "h": 55, "p": 1012}' && echo " Données envoyées."
+}'
 
 sleep 2
 
-echo -e "${YELLOW}🔍 Vérification dans Orion (Entité: $ENTITY_ID)...${NC}"
-RESPONSE=$(curl -s "http://localhost:1026/v2/entities/$ENTITY_ID" \
+echo -e "${YELLOW}🔍 Vérification dans Orion (Entité: urn:ngsi-ld:Cluster:'$DEVICE_ID')...${NC}"
+RESPONSE=$(curl -s "http://localhost:1026/v2/entities/urn:ngsi-ld:Cluster:'$DEVICE_ID'" \
   -H 'fiware-service: openiot' \
   -H 'fiware-servicepath: /')
 
 # Affichage du résultat
-echo $RESPONSE | jq . 2>/dev/null || echo $RESPONSE
+echo $RESPONSE
 
 echo -e "${GREEN}✅ Setup terminé !${NC}"

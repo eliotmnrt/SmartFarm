@@ -25,9 +25,170 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 0,
+      "id": 1,
       "links": [],
       "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "CrateDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "fixedColor": "red",
+                "mode": "continuous-GrYlRd"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "fieldMinMax": true,
+              "mappings": [],
+              "max": 30,
+              "min": 15,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "celsius"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "basemap": {
+              "config": {
+                "server": "streets",
+                "showLabels": true,
+                "theme": "auto"
+              },
+              "name": "Layer 0",
+              "noRepeat": false,
+              "opacity": 0.7,
+              "type": "carto"
+            },
+            "controls": {
+              "mouseWheelZoom": true,
+              "showAttribution": true,
+              "showDebug": false,
+              "showMeasure": false,
+              "showScale": false,
+              "showZoom": true
+            },
+            "layers": [
+              {
+                "config": {
+                  "showLegend": false,
+                  "style": {
+                    "color": {
+                      "field": "avg",
+                      "fixed": "dark-green"
+                    },
+                    "opacity": 0.8,
+                    "rotation": {
+                      "field": "avg",
+                      "fixed": 0,
+                      "max": 360,
+                      "min": -360,
+                      "mode": "mod"
+                    },
+                    "size": {
+                      "fixed": 8,
+                      "max": 15,
+                      "min": 2
+                    },
+                    "symbol": {
+                      "fixed": "img/icons/marker/circle.svg",
+                      "mode": "fixed"
+                    },
+                    "symbolAlign": {
+                      "horizontal": "center",
+                      "vertical": "center"
+                    },
+                    "text": {
+                      "field": "avg",
+                      "fixed": "",
+                      "mode": "field"
+                    },
+                    "textConfig": {
+                      "fontSize": 12,
+                      "offsetX": 30,
+                      "offsetY": 0,
+                      "textAlign": "center",
+                      "textBaseline": "middle"
+                    }
+                  }
+                },
+                "filterData": {
+                  "id": "byRefId",
+                  "options": "A"
+                },
+                "layer-tooltip": true,
+                "name": "Layer 1",
+                "tooltip": true,
+                "type": "markers"
+              }
+            ],
+            "tooltip": {
+              "mode": "details"
+            },
+            "view": {
+              "allLayers": true,
+              "id": "coords",
+              "lastOnly": false,
+              "lat": 46.5,
+              "layer": "Layer 1",
+              "lon": 1.4,
+              "noRepeat": false,
+              "zoom": 8
+            }
+          },
+          "pluginVersion": "12.3.0",
+          "targets": [
+            {
+              "dataset": "doc",
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "select entity_id, longitude, latitude, AVG(temperature)\r\nfrom mtopeniot.etcluster \r\ngroup by entity_id, longitude, latitude;",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "New panel",
+          "type": "geomap"
+        },
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
@@ -117,7 +278,7 @@ data:
           "gridPos": {
             "h": 8,
             "w": 12,
-            "x": 0,
+            "x": 12,
             "y": 0
           },
           "id": 1,
@@ -145,7 +306,7 @@ data:
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT * FROM mtopeniot.etsensor ",
+              "rawSql": "SELECT * FROM mtopeniot.etcluster ",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -185,5 +346,5 @@ data:
       "timezone": "browser",
       "title": "data",
       "uid": "advlchc",
-      "version": 2
+      "version": 1
     }
