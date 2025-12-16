@@ -54,8 +54,28 @@ echo -e "${BLUE}[6/6]${NC} Déploiement de l'IoT Agent..."
 kubectl apply -f k8s/base/iot-agent/
 wait_for_pods "iot-agent"
 
+# 7. Web Dashboard
+echo -e "${BLUE}[7/8]${NC} Déploiement du Web Dashboard..."
+
+echo "   🔨 Construction de l'image Docker..."
+docker build -t web-dashboard:latest ./dashboard > /dev/null
+
+echo "   ☸️  Mise à jour Kubernetes..."
+if [ -f "k8s/base/notif/k8s_dashboard.yaml" ]; then
+    kubectl apply -f k8s/base/notif/k8s_dashboard.yaml
+    
+    # --- AJOUT CRUCIAL ICI ---
+    # Force le redémarrage pour prendre en compte la nouvelle image locale
+    kubectl rollout restart deployment web-dashboard -n $NAMESPACE
+    # -------------------------
+    
+    wait_for_pods "web-dashboard"
+else
+    echo -e "${RED}   ❌ YAML dashboard introuvable${NC}"
+fi
+
 #7. Grafana pod
-echo -e "${BLUE}[7/6]${NC} Création de l'utilisateur Grafana..."
+echo -e "${BLUE}[8/8]${NC} Création de l'utilisateur Grafana..."
 kubectl apply -f k8s/base/grafana/
 wait_for_pods "grafana"
 
