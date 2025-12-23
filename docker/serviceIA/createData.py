@@ -150,10 +150,10 @@ for cluster_id, (cx, cy) in cluster_coords.items():
         'timestamp': timestamps,
         'x': round(cx, 1), # On garde la coordonnée pour la visualisation
         'y': round(cy, 1),
-        'temperature_ambiante_c': temp_ambient.round(1),
-        'temperature_sol_c': temp_soil.round(1),
-        'humidite_ambiante': hum_ambient.round(1),
-        'humidite_sol': hum_soil.round(1),
+        'temperature': temp_ambient.round(1),
+        'soilTemperature': temp_soil.round(1),
+        'humidity': hum_ambient.round(1),
+        'soilMoisture': hum_soil.round(1),
         'azote_mg_kg': n_val.round(1),
         'phosphore_mg_kg': p_val.round(1),
         'potassium_mg_kg': k_val.round(1),
@@ -172,7 +172,7 @@ df_final.to_csv(filename, index=False)
 
 print(f"✅ Terminé ! Fichier '{filename}' généré.")
 print("\n--- Aperçu des offsets spatiaux calculés (Moyenne sur la période) ---")
-summary = df_final.groupby(['cluster_id', 'x', 'y'])[['temperature_ambiante_c', 'humidite_sol', 'azote_mg_kg']].mean().reset_index()
+summary = df_final.groupby(['cluster_id', 'x', 'y'])[['temperature', 'soilMoisture', 'azote_mg_kg']].mean().reset_index()
 print(summary)
 
 # ==========================================
@@ -192,8 +192,8 @@ fig = px.scatter(
     y='y', 
     animation_frame='date_str',    # C'est ça qui crée la barre de progression (Slider)
     animation_group='cluster_id',  # Pour suivre les points d'une image à l'autre
-    color='humidite_sol',        # La couleur change avec l'humidité
-    size='temperature_ambiante_c', # La taille change avec la température (optionnel)
+    color='soilMoisture',        # La couleur change avec l'humidité
+    size='temperature', # La taille change avec la température (optionnel)
     hover_name='cluster_id',       # Affiche le nom "cluster_XX" au survol
     hover_data=['azote_mg_kg', 'ph'], # Affiche les détails au survol
     

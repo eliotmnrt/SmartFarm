@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: ai-service
-        image: mon-docker-registry/ai-service:v1  # Ou build local
+        image: ai-service:local  # Ou build local
         ports:
         - containerPort: 8000
