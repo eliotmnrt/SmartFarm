@@ -1,5 +1,4 @@
 import joblib
-import numpy as np
 from fastapi import FastAPI, Request, HTTPException
 import httpx
 import uvicorn
