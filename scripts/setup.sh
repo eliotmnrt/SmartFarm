@@ -168,10 +168,41 @@ curl -s -X POST "http://localhost:1026/v2/subscriptions" \
     "attrs": [],
     "metadata": ["dateCreated", "dateModified"]
   },
-  "throttling": 1
+  "throttling": 0
 }'
 
 sleep 2
+
+curl -X POST "http://localhost:1026/v2/subscriptions" \
+  -H 'Content-Type: application/json' \
+  -H 'fiware-service: openiot' \
+  -H 'fiware-servicepath: /' \
+  -d '{
+  "description": "IA Feedback Loop: Detect Field State",
+  "subject": {
+    "entities": [
+      {
+        "idPattern": ".*",
+        "type": "'${ENTITY_TYPE}'"      
+      }
+    ],
+    "condition": {
+      "attrs": [ 
+        "temperature", "humidity", "soilMoisture", "soilTemperature"
+        ] 
+      }
+  },
+  "notification": {
+    "http": {
+      "url": "http://ai-service:8000/v2/notify"
+    },
+    "attrs": [
+      "temperature", "soilTemperature", 
+      "humidity", "soilMoisture"
+    ]
+  },
+  "throttling": 0
+}'
 
 echo -e "${YELLOW}🔍 Vérification dans Orion (Entité: urn:ngsi-ld:Cluster:'$DEVICE_ID')...${NC}"
 RESPONSE=$(curl -s "http://localhost:1026/v2/entities/urn:ngsi-ld:Cluster:'$DEVICE_ID'" \

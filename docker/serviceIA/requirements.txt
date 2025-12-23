@@ -1,3 +1,8 @@
+fastapi
+httpx
+uvicorn
 numpy
-kagglehub
+joblib
 pandas
+typing
+scikit-learn

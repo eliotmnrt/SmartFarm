@@ -59,8 +59,11 @@ echo -e "${BLUE}[7/6]${NC} Création de l'utilisateur Grafana..."
 kubectl apply -f k8s/base/grafana/
 wait_for_pods "grafana"
 
+#8. AI-service
+echo -e "${BLUE}[8/6]${NC} Déploiement de l'AI-Service..."
+kubectl apply -f k8s/base/ai-service/
+wait_for_pods "ai-service"
 
-# Port-forwards
 
 
 

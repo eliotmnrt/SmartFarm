@@ -24,11 +24,11 @@ for timestamp, group in df.groupby('timestamp'):
         device_id = row['cluster_id']
         
         payload = {
-            "date": iso_date,  # <--- On envoie l'heure du CSV ici
-            "ta": row['temperature_ambiante_c'],
-            "ts": row['temperature_sol_c'],
-            "ha": row['humidite_ambiante'],
-            "hs": row['humidite_sol'],
+            "date": iso_date,
+            "ta": row['temperature'],
+            "ts": row['soilTemperature'],
+            "ha": row['humidity'],
+            "hs": row['soilMoisture'],
             "n":  row['azote_mg_kg'],
             "p":  row['phosphore_mg_kg'],
             "k":  row['potassium_mg_kg'],
@@ -41,7 +41,6 @@ for timestamp, group in df.groupby('timestamp'):
         except Exception:
             pass
 
-    # Petite pause pour ne pas faire exploser le serveur local
-    time.sleep(0.1)
+    time.sleep(5)
 
 print("✅ Terminé.")
