@@ -74,12 +74,30 @@ async def receive_notification(request: Request):
 
             try:
                 # Extraction des features
-                features = {
-                    'temperature': float(entity["temperature"]["value"]),
-                    'soilTemperature': float(entity["soilTemperature"]["value"]),
-                    'humidity': float(entity["humidity"]["value"]),
-                    'soilMoisture': float(entity["soilMoisture"]["value"]),
-                }
+                # Validation et extraction des features
+                required_fields = ['temperature', 'soilTemperature', 'humidity', 'soilMoisture']
+                missing_fields = [field for field in required_fields if field not in entity]
+                
+                if missing_fields:
+                    print(f"❌ Champs manquants pour {entity_id}: {missing_fields}")
+                    errors += 1
+                    continue
+                
+                try:
+                    features = {
+                        'temperature': float(entity["temperature"]["value"]),
+                        'soilTemperature': float(entity["soilTemperature"]["value"]),
+                        'humidity': float(entity["humidity"]["value"]),
+                        'soilMoisture': float(entity["soilMoisture"]["value"]),
+                    }
+                except KeyError as e:
+                    print(f"❌ Champ sans attribut 'value' pour {entity_id}: {e}")
+                    errors += 1
+                    continue
+                except (ValueError, TypeError) as e:
+                    print(f"❌ Valeur non numérique pour {entity_id}: {e}")
+                    errors += 1
+                    continue
                 print(f"   📊 Features: {features}")
                 
             except (KeyError, ValueError, TypeError) as e:
