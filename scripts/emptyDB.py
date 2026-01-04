@@ -1,5 +1,4 @@
 import requests
-import json
 
 # --- CONFIGURATION ---
 CRATEDB_SQL_URL = "http://localhost:4200/_sql"

@@ -2,6 +2,7 @@
 *.secret.yaml
 *-secret.yaml
 secret.yaml
+.env
 
 # Certificats
 *.crt

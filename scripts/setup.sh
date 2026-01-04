@@ -4,7 +4,9 @@
 # CONFIGURATION
 # ==========================================
 NAMESPACE="fiware-platform"
-API_KEY="4jggokgpepnvsb2uv4s40d59ov"
+
+source .env
+API_KEY="$API_KEY"
 DEVICE_ID="sensor001"
 ENTITY_ID="urn:ngsi-ld:Cluster:cluster_1"
 ENTITY_TYPE="Cluster"

@@ -47,7 +47,6 @@ def introduce_chaos(df):
             if dice < PROB_OUTLIER:
                 # Soit negatif, soit tres grand, soit tres petit
                 factor = random.choice([-1, 0.2, 5])
-                print(f"factor: {factor}")
                 print(f"⚠️ Outlier injecté à l'index {i}, colonne {col}")
                 df_dirty.at[i, col] = df_dirty.at[i, col] * factor
             

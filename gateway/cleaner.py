@@ -4,6 +4,12 @@ import requests
 import time
 import math
 from collections import deque, defaultdict
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # charge le .env à la racine
+
+API_KEY = os.getenv("API_KEY")
 
 
 INPUT_DIRTY_FILE = 'sensor_data_raw_dirty.csv'
@@ -16,7 +22,6 @@ FIWARE_HEADERS = {
     'Content-Type': 'application/json'
 }
 
-API_KEY = "4jggokgpepnvsb2uv4s40d59ov"
 SEND_TO_ORION = True  
 
 LAT_ORIGIN=46.194814
@@ -173,7 +178,7 @@ class SensorGateway:
                 value = -0.001
                 print(f"   ❄️ Capteur {device_id} metric {metric} gelé. Forçage valeur à {value}.")
                 return value, "FIXED_FREEZE"
-                # envoyer alerte orion
+                # TODO: envoyer alerte orion
 
         # 5. Lissage du Bruit (Noise Reduction)
         # Même si la valeur est bonne, on l'ajoute à l'historique et on lisse légèrement
@@ -245,8 +250,6 @@ def run_simulation():
                     "p": payload_clean.get('phosphore_mg_kg'),
                     "k": payload_clean.get('potassium_mg_kg'),
                     "ph": payload_clean.get('ph'),
-                    "longitude": sensors_positions[device_id][0],
-                    "latitude": sensors_positions[device_id][1],
                 }
 
                 # ENVOI VERS ORION
@@ -258,8 +261,8 @@ def run_simulation():
 
                         url = f"{IOTA_HTTP_URL}?k={API_KEY}&i={device_id}"
                         requests.post(url, json=final_payload, timeout=1)
-                    except Exception:
-                        pass # On ignore les erreurs de connexion pour la simu
+                    except Exception as e:
+                        print(f"⚠️ Erreur lors de l'envoi à Orion pour le device {device_id}: {e}")
             
             # Petite pause pour voir défiler (optionnel)
             time.sleep(1)
