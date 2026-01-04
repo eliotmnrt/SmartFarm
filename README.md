@@ -92,7 +92,7 @@ Le script `setup.sh` automatise cette étape critique.
 [cite\_start]**Ce que fait ce script [cite: 275-285] :**
 
 1.  **Port-Forwarding** : Ouvre des tunnels temporaires vers Orion (:1026), IoT Agent (:4041/:7896) et Grafana (:3000) pour permettre la configuration depuis votre machine locale.
-2.  **Service Group** : Configure l'IoT Agent pour accepter les données avec l'API Key `4jggokgpepnvsb2uv4s40d59ov`.
+2.  **Service Group** : Configure l'IoT Agent pour accepter les données avec l'API Key.
 3.  **Device Provisioning** : Crée le capteur `sensor001` et le lie explicitement à l'entité `urn:ngsi-ld:Sensor:001` pour éviter les doublons.
 4.  [cite\_start]**Subscription** : Crée une souscription dans Orion pour que tout changement sur un capteur soit envoyé à **QuantumLeap** pour archivage[cite: 281].
 

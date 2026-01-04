@@ -1,10 +1,13 @@
 import pandas as pd
 import requests
 import time
+from dotenv import load_dotenv
+import os
 
-# Configuration
+load_dotenv()  # charge le .env à la racine
+
+API_KEY = os.getenv("API_KEY")
 IOT_AGENT_URL = "http://localhost:7896/iot/json"
-API_KEY = "4jggokgpepnvsb2uv4s40d59ov"
 CSV_FILE = "docker/serviceIA/donnees_spatiales_cluster.csv"
 
 # Chargement
