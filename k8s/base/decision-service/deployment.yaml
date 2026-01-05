@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-service
+  namespace: fiware-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: decision-service
+  template:
+    metadata:
+      labels:
+        app: decision-service
+    spec:
+      containers:
+      - name: decision-service
+        image: smartfarm/decision-service:latest # Pensez à builder l'image !
+        imagePullPolicy: IfNotPresent # Ou Never si image locale
+        env:
+        - name: ORION_HOST
+          value: "http://orion:1026"
+        - name: CRATE_HOST
+          value: "http://crate:4200"

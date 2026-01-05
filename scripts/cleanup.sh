@@ -12,7 +12,7 @@ echo -e "${RED}⚠️  ATTENTION : Cela va supprimer TOUTES les données !${NC}"
 echo -e "${YELLOW}Appuyez sur Entrée pour continuer ou Ctrl+C pour annuler...${NC}"
 read
 
-echo -e "${YELLOW}���️  Suppression du namespace...${NC}"
+echo -e "${YELLOW}���️  Suppression du namespace...${NC}"
 kubectl delete namespace $NAMESPACE
 
 echo -e "${YELLOW}Attente de la suppression complète...${NC}"
@@ -26,7 +26,7 @@ echo -e "${GREEN}✅ Namespace supprimé${NC}"
 
 # Optionnel : Nettoyer les PersistentVolumes orphelins
 echo ""
-echo -e "${YELLOW}Nettoyage des PersistentVolumes orphelins...${NC}"
-kubectl get pv | grep Released | awk '{print $1}' | xargs -r kubectl delete pv
+
+./scripts/portManager.sh stop
 
 echo -e "${GREEN}✅ Nettoyage complet terminé${NC}"

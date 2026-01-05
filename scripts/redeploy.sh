@@ -20,49 +20,54 @@ wait_for_pods() {
 }
 
 # 1. Namespace
-echo -e "${BLUE}[1/6]${NC} Création du namespace..."
+echo -e "${BLUE}[0/9]${NC} Création du namespace..."
 kubectl apply -f k8s/base/namespace.yaml
 sleep 2
 
-# 7. Istio
-echo -e "${BLUE}[1.5/6]${NC} Déploiement des Services Istio..."
+# 7. Istio Services
+echo -e "${BLUE}[1/9]${NC} Déploiement des Services Istio..."
 kubectl apply -f k8s/istio/
 sleep 10
 
 # 2. MongoDB
-echo -e "${BLUE}[2/6]${NC} Déploiement de MongoDB..."
+echo -e "${BLUE}[2/9]${NC} Déploiement de MongoDB..."
 kubectl apply -f k8s/base/mongodb/
 wait_for_pods "mongodb"
 
 # 3. Cratedb
-echo -e "${BLUE}[3/6]${NC} Déploiement de Cratedb..."
+echo -e "${BLUE}[3/9]${NC} Déploiement de Cratedb..."
 kubectl apply -f k8s/base/cratedb/
 wait_for_pods "cratedb"
 
 # 4. Orion
-echo -e "${BLUE}[4/6]${NC} Déploiement d'Orion..."
+echo -e "${BLUE}[4/9]${NC} Déploiement d'Orion..."
 kubectl apply -f k8s/base/orion/
 wait_for_pods "orion"
 
 # 5. QuantumLeap
-echo -e "${BLUE}[5/6]${NC} Déploiement de QuantumLeap..."
+echo -e "${BLUE}[5/9]${NC} Déploiement de QuantumLeap..."
 kubectl apply -f k8s/base/quantumleap/
 wait_for_pods "quantumleap"
 
 # 6. IoT Agent
-echo -e "${BLUE}[6/6]${NC} Déploiement de l'IoT Agent..."
+echo -e "${BLUE}[6/9]${NC} Déploiement de l'IoT Agent..."
 kubectl apply -f k8s/base/iot-agent/
 wait_for_pods "iot-agent"
 
 #7. Grafana pod
-echo -e "${BLUE}[7/6]${NC} Création de l'utilisateur Grafana..."
+echo -e "${BLUE}[7/9]${NC} Création de l'utilisateur Grafana..."
 kubectl apply -f k8s/base/grafana/
 wait_for_pods "grafana"
 
 #8. AI-service
-echo -e "${BLUE}[8/6]${NC} Déploiement de l'AI-Service..."
+echo -e "${BLUE}[8/9]${NC} Déploiement de l'AI-Service..."
 kubectl apply -f k8s/base/ai-service/
 wait_for_pods "ai-service"
+
+#9. Decision-service
+echo -e "${BLUE}[9/9]${NC} Déploiement de la Decision-Service..."
+kubectl apply -f k8s/base/decision-service/
+wait_for_pods "decision-service"
 
 
 
