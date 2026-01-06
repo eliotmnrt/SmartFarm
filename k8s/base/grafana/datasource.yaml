@@ -17,8 +17,22 @@ data:
         isDefault: true
         editable: true
         jsonData:
-          sslmode: "disable"      # Désactive SSL (CrateDB interne)
-          postgresVersion: 1200   # 👈 AIDE : Dit à Grafana "Considère que c'est du PG 12"
+          sslmode: "disable"
+          postgresVersion: 1200
           database: "doc"
         secureJsonData:
-          password: ""            # Mot de passe vide explicite
+          password: ""
+
+  infinity.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Orion Live (Infinity)
+        type: yesoreyeram-infinity-datasource
+        uid: OrionLive                        # CRITIQUE
+        access: proxy
+        url: http://orion:1026
+        isDefault: false
+        basicAuth: false
+        jsonData:
+          allowedHosts:
+            - "http://orion:1026"

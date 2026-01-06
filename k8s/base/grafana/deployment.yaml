@@ -24,8 +24,14 @@ spec:
         env:
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: "admin"
+        - name: GF_INSTALL_PLUGINS
+          value: "yesoreyeram-infinity-datasource"
         
-        volumeMounts:
+        volumeMounts:      
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources/infinity.yaml
+          subPath: infinity.yaml
+
         - name: grafana-datasources
           mountPath: /etc/grafana/provisioning/datasources/cratedb.yaml
           subPath: cratedb.yaml

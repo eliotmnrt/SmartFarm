@@ -30,14 +30,13 @@ data:
       "panels": [
           {
               "datasource": {
-                  "type": "grafana-postgresql-datasource",
-                  "uid": "CrateDB"
+                  "type": "yesoreyeram-infinity-datasource",
+                  "uid": "OrionLive"
               },
               "fieldConfig": {
                   "defaults": {
                       "color": {
-                          "fixedColor": "orange",
-                          "mode": "continuous-GrYlRd"
+                          "mode": "thresholds"
                       },
                       "custom": {
                           "hideFrom": {
@@ -46,13 +45,11 @@ data:
                               "viz": false
                           }
                       },
-                      "displayName": "fieldState",
-                      "fieldMinMax": false,
                       "mappings": [
                           {
                               "options": {
                                   "0": {
-                                      "color": "orange",
+                                      "color": "semi-dark-orange",
                                       "index": 0,
                                       "text": "Sec"
                                   },
@@ -70,7 +67,6 @@ data:
                               "type": "value"
                           }
                       ],
-                      "noValue": "undef",
                       "thresholds": {
                           "mode": "absolute",
                           "steps": [
@@ -89,7 +85,7 @@ data:
                   "x": 0,
                   "y": 0
               },
-              "id": 3,
+              "id": 4,
               "options": {
                   "basemap": {
                       "config": {},
@@ -111,12 +107,11 @@ data:
                               "showLegend": false,
                               "style": {
                                   "color": {
-                                      "field": "fieldstate",
+                                      "field": "fieldState",
                                       "fixed": "dark-green"
                                   },
-                                  "opacity": 0.7,
+                                  "opacity": 0.8,
                                   "rotation": {
-                                      "field": "fieldstate",
                                       "fixed": 0,
                                       "max": 360,
                                       "min": -360,
@@ -136,7 +131,7 @@ data:
                                       "vertical": "center"
                                   },
                                   "text": {
-                                      "field": "fieldstate",
+                                      "field": "fieldState",
                                       "fixed": "",
                                       "mode": "field"
                                   },
@@ -149,7 +144,6 @@ data:
                                   }
                               }
                           },
-                          "layer-tooltip": false,
                           "location": {
                               "mode": "auto"
                           },
@@ -165,7 +159,7 @@ data:
                       "allLayers": true,
                       "id": "coords",
                       "lat": 46.2,
-                      "lon": 1.20,
+                      "lon": 1.2,
                       "noRepeat": false,
                       "zoom": 14
                   }
@@ -173,32 +167,72 @@ data:
               "pluginVersion": "12.3.1",
               "targets": [
                   {
-                      "dataset": "doc",
-                      "editorMode": "code",
+                      "columns": [
+                          {
+                              "selector": "id",
+                              "text": "entity_id",
+                              "type": "string"
+                          },
+                          {
+                              "selector": "latitude",
+                              "text": "latitude",
+                              "type": "number"
+                          },
+                          {
+                              "selector": "longitude",
+                              "text": "longitude",
+                              "type": "number"
+                          },
+                          {
+                              "selector": "fieldState",
+                              "text": "fieldState",
+                              "type": "string"
+                          }
+                      ],
+                      "datasource": {
+                          "type": "yesoreyeram-infinity-datasource",
+                          "uid": "OrionLive"
+                      },
+                      "filters": [],
                       "format": "table",
-                      "rawQuery": true,
-                      "rawSql": "SELECT entity_id, latitude, longitude, fieldState, time_index\r\nFROM (\r\n    SELECT \r\n        entity_id,\r\n        latitude,\r\n        longitude,\r\n        fieldState,\r\n        time_index,\r\n        ROW_NUMBER() OVER (PARTITION BY entity_id ORDER BY time_index DESC) as rang\r\n    FROM mtopeniot.etcluster\r\n) as lastState\r\nWHERE rang = 1 limit 100;",
+                      "global_query_id": "",
+                      "parser": "backend",
                       "refId": "A",
-                      "sql": {
-                          "columns": [
+                      "root_selector": "",
+                      "source": "url",
+                      "type": "json",
+                      "url": "http://orion:1026/v2/entities",
+                      "url_options": {
+                          "data": "",
+                          "headers": [
                               {
-                                  "parameters": [],
-                                  "type": "function"
+                                  "key": "fiware-service",
+                                  "value": "openiot"
+                              },
+                              {
+                                  "key": "fiware-servicepath",
+                                  "value": "/"
                               }
                           ],
-                          "groupBy": [
+                          "method": "GET",
+                          "params": [
                               {
-                                  "property": {
-                                      "type": "string"
-                                  },
-                                  "type": "groupBy"
+                                  "key": "type",
+                                  "value": "Cluster"
+                              },
+                              {
+                                  "key": "options",
+                                  "value": "keyValues"
+                              },
+                              {
+                                  "key": "limit",
+                                  "value": "100"
                               }
-                          ],
-                          "limit": 50
+                          ]
                       }
                   }
               ],
-              "title": "State Geomap",
+              "title": "Geomap FieldState Orion",
               "type": "geomap"
           },
           {
@@ -293,7 +327,7 @@ data:
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT timeInstant, humidity, soilmoisture, temperature, soiltemperature, n, p, k FROM mtopeniot.etcluster where entity_id ~ '.*' || '${SelectedCluster:regex}';",
+                      "rawSql": "SELECT timeInstant, humidity, soilmoisture, temperature, soiltemperature FROM mtopeniot.etcluster where entity_id ~ '.*' || '${SelectedCluster:regex}';",
                       "refId": "A",
                       "sql": {
                           "columns": [
@@ -443,7 +477,7 @@ data:
                       "lastOnly": false,
                       "lat": 46.2,
                       "layer": "Layer 1",
-                      "lon": 1.20,
+                      "lon": 1.2,
                       "noRepeat": false,
                       "zoom": 14
                   }
@@ -486,7 +520,6 @@ data:
       "templating": {
           "list": [
               {
-                  "allValue": "",
                   "current": {
                       "text": [
                           "cluster_01"
