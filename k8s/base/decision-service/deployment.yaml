@@ -19,6 +19,10 @@ spec:
         imagePullPolicy: IfNotPresent # Ou Never si image locale
         env:
         - name: ORION_HOST
-          value: "http://orion:1026"
-        - name: CRATE_HOST
-          value: "http://crate:4200"
+          value: "http://orion:1026/v2/entities"
+        - name: "THRESHOLD_DRY"
+          value: "0.20"
+        - name: "THRESHOLD_STANDARD"
+          value: "0.60"
+        - name: "CHECK_INTERVAL"
+          value: "10" # 10 secondes

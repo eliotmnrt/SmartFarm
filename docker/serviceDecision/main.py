@@ -3,20 +3,23 @@ import time
 import datetime
 import logging
 from collections import defaultdict
+import os
+
+
 
 # --- CONFIGURATION LOGGING ---
 # INFO : Affiche seulement les décisions (🚨) et les erreurs.
 # DEBUG : Affiche aussi les stats (📊) et les détails HTTP.
 logging.basicConfig(
-    level=logging.DEBUG, 
+    level=logging.INFO, 
     format='%(asctime)s [%(levelname)s] %(message)s',
     datefmt='%H:%M:%S'
 )
 logger = logging.getLogger(__name__)
 
 # --- CONFIGURATION ---
-ORION_URL = "http://orion:1026/v2/entities"
-CHECK_INTERVAL = 10  # Vérifier toutes les 10 secondes
+ORION_URL = os.environ.get("ORION_HOST", "http://localhost:1026/v2/entities") # fallback localhost
+CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", 10))  # en secondes
 
 ZONES = {
     "Champ_Nord": ["cluster_07", "cluster_08", "cluster_09", "cluster_10"],
@@ -24,8 +27,8 @@ ZONES = {
     "Serre_Lac":  ["cluster_06"]
 }
 
-THRESHOLD_DRY = 0.20      # > 20% Sec (0)
-THRESHOLD_STANDARD = 0.60 # > 60% Standard (2)
+THRESHOLD_DRY = float(os.environ.get("THRESHOLD_DRY", 0.20))      # > 20% Sec (0)
+THRESHOLD_STANDARD = float(os.environ.get("THRESHOLD_STANDARD", 0.60)) # > 60% Standard (2)
 
 HEADERS_GET = {'fiware-service': 'openiot'}
 HEADERS_POST = {
@@ -71,7 +74,15 @@ def send_alert(zone_name, action, clusters):
             }
         }
         try:
-            requests.post(url, json=payload, headers=HEADERS_POST)
+            resp = requests.post(url, json=payload, headers=HEADERS_POST)
+            if resp.status_code >= 400:
+                logger.error(
+                    f"   Erreur update {device_id} (HTTP {resp.status_code}): {resp.text}"
+                )
+            else:
+                logger.debug(
+                    f"   Update envoyé pour {device_id} (HTTP {resp.status_code})"
+                )
         except Exception as e:
             logger.error(f"   Erreur update {device_id}: {e}")
 
@@ -85,7 +96,7 @@ def run_decision_cycle():
     for d in devices:
         d_id = d.get('id', '')
         simple_id = d_id.split(':')[-1] 
-        device_map[simple_id] = d.get('fieldState', 'Inconnu')
+        device_map[simple_id] = d.get('fieldState', -1)
         timestamp = d.get('TimeInstant', 'Inconnu')
 
     # Analyse par Zone a un instant T
