@@ -84,8 +84,8 @@ class SensorGateway:
         # Mémoire tampon : dictionnaire de deques (historique des 5 dernières valeurs valides)
         self.memory = defaultdict(lambda: defaultdict(lambda: deque(maxlen=5)))
         
-        # Pour détecter les capteurs gelés (Freeze)
-        self.freeze_counters = defaultdict(lambda: defaultdict(int))
+        # Pour détecter les capteurs defectueux (Freeze)
+        self.defects_counters = defaultdict(lambda: defaultdict(int))
         
         # Conserver la liste des devices déjà provisionnés
         self.known_devices = set()
@@ -111,15 +111,16 @@ class SensorGateway:
                     "transport": "HTTP",
                     "endpoint": "http://iot-agent:7896/iot/json",
                     "attributes": [
-                    {"object_id": "date", "name": "TimeInstant", "type": "DateTime"},
-                    {"object_id": "ta", "name": "temperature", "type": "Number"},
-                    {"object_id": "ts", "name": "soilTemperature", "type": "Number"},
-                    {"object_id": "ha", "name": "humidity", "type": "Number"},
-                    {"object_id": "hs", "name": "soilMoisture", "type": "Number"},
-                    {"object_id": "n",  "name": "n", "type": "Number"},
-                    {"object_id": "p",  "name": "p", "type": "Number"},
-                    {"object_id": "k",  "name": "k", "type": "Number"},
-                    {"object_id": "ph", "name": "ph", "type": "Number"}
+                        {"object_id": "date", "name": "TimeInstant", "type": "DateTime"},
+                        {"object_id": "ta", "name": "temperature", "type": "Number"},
+                        {"object_id": "ts", "name": "soilTemperature", "type": "Number"},
+                        {"object_id": "ha", "name": "humidity", "type": "Number"},
+                        {"object_id": "hs", "name": "soilMoisture", "type": "Number"},
+                        {"object_id": "n",  "name": "n", "type": "Number"},
+                        {"object_id": "p",  "name": "p", "type": "Number"},
+                        {"object_id": "k",  "name": "k", "type": "Number"},
+                        {"object_id": "ph", "name": "ph", "type": "Number"},
+                        {"object_id": "state", "name": "state", "type": "String"}
                     ],
                     "static_attributes": [
                         {"name": "longitude", "type": "Number", "value": lon}, 
@@ -134,25 +135,51 @@ class SensorGateway:
             if response.status_code in [201, 200, 409]:
                 print(f"✅ Device {device_id} enregistré (Code {response.status_code})")
                 self.known_devices.add(device_id)
-                return True
             else:
                 print(f"❌ Échec provisioning {device_id}: {response.text}")
                 return False
         except Exception as e:
             print(f"❌ Erreur connexion Admin API: {e}")
             return False
+        
+        # Initialisation de l'état du device
+        payload = {
+            "state": "ACTIVE"
+        }
+        send_to_orion(device_id, payload)
+        return True
+
 
     def clean_value(self, device_id, metric, value):
-        # 1. Gestion des NaN (Donnée manquante)
+        # 1. Gestion des NaN
         if pd.isna(value):
             if len(self.memory[device_id][metric]) > 0:
-                corrected = np.mean(self.memory[device_id][metric])
-                return corrected, "FIXED_NAN"
+                last_val = self.memory[device_id][metric][-1]
+                if pd.isna(last_val):
+                    self.defects_counters[device_id][metric] += 1
+                    print(f"   ⚠️ Capteur {device_id} metric {metric} NaN répété ({self.defects_counters[device_id][metric]}).")
+                else:
+                    self.defects_counters[device_id][metric] = 0
+
+                self.memory[device_id][metric].append(value)
+
+                if self.defects_counters[device_id][metric] > 5:
+                    value = -0.001
+                    print(f"   ❄️ Capteur {device_id} metric {metric} cassé (NaN répétés). Forçage valeur à {value}.")
+                    
+                    # Update state in Orion for maintenance
+                    payload = {
+                        "state": "ERROR_BROKEN"
+                    }
+                    send_to_orion(device_id, payload)
+                    
+                    return value, "FIXED_BROKEN"
+                return value, "NAN"
             else:
                 t_min, t_max = THRESHOLDS.get(metric, (0, 0))
                 return (t_min + t_max) / 2, "DEFAULT"
 
-        # 2. Gestion des Outliers (Valeurs aberrantes physiquement)
+        # 2. Gestion des Outliers
         t_min, t_max = THRESHOLDS.get(metric, (-999, 999))
         if value < t_min or value > t_max:
             if len(self.memory[device_id][metric]) > 0:
@@ -172,20 +199,27 @@ class SensorGateway:
     #                return corrected, "FIXED_STAT_OUTLIER"
 
         # 4. Gestion du Freeze (Capteur bloqué)
-        # Si la valeur est STRICTEMENT identique à la précédente
         if len(self.memory[device_id][metric]) > 0:
             last_val = self.memory[device_id][metric][-1]
             if value == last_val:
-                self.freeze_counters[device_id][metric] += 1
+                self.defects_counters[device_id][metric] += 1
             else:
-                self.freeze_counters[device_id][metric] = 0
+                self.defects_counters[device_id][metric] = 0
             
+            self.memory[device_id][metric].append(value)
+
             # Si bloqué depuis plus de 5 cycles
-            if self.freeze_counters[device_id][metric] > 5:
+            if self.defects_counters[device_id][metric] > 5:
                 value = -0.001
                 print(f"   ❄️ Capteur {device_id} metric {metric} gelé. Forçage valeur à {value}.")
+                
+                # Update state in Orion for maintenance
+                payload = {
+                    "state": "ERROR_FREEZE"
+                }
+                send_to_orion(device_id, payload)
+                
                 return value, "FIXED_FREEZE"
-                # TODO: envoyer alerte orion
 
         # 5. Lissage du Bruit
         if len(self.memory[device_id][metric]) > 0:
@@ -196,6 +230,16 @@ class SensorGateway:
 
         self.memory[device_id][metric].append(smoothed_value)
         return smoothed_value, "OK"
+
+
+def send_to_orion(device_id, payload):
+    if SEND_TO_ORION:
+        try:
+            url = f"{IOTA_HTTP_URL}?k={API_KEY}&i={device_id}"
+            requests.post(url, json=payload, timeout=1)
+        except Exception as e:
+            print(f"⚠️ Erreur lors de l'envoi à Orion pour le device {device_id}: {e}")
+
 
 # --- MAIN LOOP (SIMULATION DU TEMPS) ---
 def run_simulation():
@@ -239,7 +283,7 @@ def run_simulation():
                 if debug_msg:
                     print(f"   🔧 {device_id} corrections : {', '.join(debug_msg)}")
 
-                final_payload = {
+                payload = {
                     "date": iso_date,
                     "ta": payload_clean.get('temperature'),
                     "ts": payload_clean.get('soilTemperature'),
@@ -251,15 +295,14 @@ def run_simulation():
                     "ph": payload_clean.get('ph'),
                 }
 
+                # Préparation du payload final sans les nan
+                final_payload = {k: v for k, v in payload.items() if not pd.isna(v)}
+
                 # ENVOI VERS ORION
                 if SEND_TO_ORION:
-                    try:
-                        if not gateway.ensure_device_exists(device_id):
-                            continue
-                        url = f"{IOTA_HTTP_URL}?k={API_KEY}&i={device_id}"
-                        requests.post(url, json=final_payload, timeout=1)
-                    except Exception as e:
-                        print(f"⚠️ Erreur lors de l'envoi à Orion pour le device {device_id}: {e}")
+                    if not gateway.ensure_device_exists(device_id):
+                        continue
+                    send_to_orion(device_id, final_payload)
             
             time.sleep(0.1)
 
