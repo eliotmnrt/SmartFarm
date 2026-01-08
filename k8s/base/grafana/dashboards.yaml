@@ -6,558 +6,759 @@ metadata:
 data:
   smartfarm.json: |
     {
-      "annotations": {
-          "list": [
-              {
-                  "builtIn": 1,
-                  "datasource": {
-                      "type": "grafana",
-                      "uid": "-- Grafana --"
-                  },
-                  "enable": true,
-                  "hide": true,
-                  "iconColor": "rgba(0, 211, 255, 1)",
-                  "name": "Annotations & Alerts",
-                  "type": "dashboard"
-              }
-          ]
-      },
-      "editable": true,
-      "fiscalYearStartMonth": 0,
-      "graphTooltip": 0,
-      "id": 1,
-      "links": [],
-      "panels": [
-          {
-              "datasource": {
-                  "type": "yesoreyeram-infinity-datasource",
-                  "uid": "OrionLive"
-              },
-              "fieldConfig": {
-                  "defaults": {
-                      "color": {
-                          "mode": "thresholds"
-                      },
-                      "custom": {
-                          "hideFrom": {
-                              "legend": false,
-                              "tooltip": false,
-                              "viz": false
-                          }
-                      },
-                      "mappings": [
-                          {
-                              "options": {
-                                  "0": {
-                                      "color": "semi-dark-orange",
-                                      "index": 0,
-                                      "text": "Sec"
-                                  },
-                                  "1": {
-                                      "color": "dark-green",
-                                      "index": 1,
-                                      "text": "Humide"
-                                  },
-                                  "2": {
-                                      "color": "super-light-orange",
-                                      "index": 2,
-                                      "text": "Standard"
-                                  }
-                              },
-                              "type": "value"
-                          }
-                      ],
-                      "thresholds": {
-                          "mode": "absolute",
-                          "steps": [
-                              {
-                                  "color": "green",
-                                  "value": 0
-                              }
-                          ]
-                      }
-                  },
-                  "overrides": []
-              },
-              "gridPos": {
-                  "h": 8,
-                  "w": 12,
-                  "x": 0,
-                  "y": 0
-              },
-              "id": 4,
-              "options": {
-                  "basemap": {
-                      "config": {},
-                      "name": "Layer 0",
-                      "noRepeat": false,
-                      "type": "default"
-                  },
-                  "controls": {
-                      "mouseWheelZoom": true,
-                      "showAttribution": true,
-                      "showDebug": false,
-                      "showMeasure": false,
-                      "showScale": false,
-                      "showZoom": true
-                  },
-                  "layers": [
-                      {
-                          "config": {
-                              "showLegend": false,
-                              "style": {
-                                  "color": {
-                                      "field": "fieldState",
-                                      "fixed": "dark-green"
-                                  },
-                                  "opacity": 0.8,
-                                  "rotation": {
-                                      "fixed": 0,
-                                      "max": 360,
-                                      "min": -360,
-                                      "mode": "mod"
-                                  },
-                                  "size": {
-                                      "fixed": 7,
-                                      "max": 15,
-                                      "min": 2
-                                  },
-                                  "symbol": {
-                                      "fixed": "img/icons/marker/circle.svg",
-                                      "mode": "fixed"
-                                  },
-                                  "symbolAlign": {
-                                      "horizontal": "center",
-                                      "vertical": "center"
-                                  },
-                                  "text": {
-                                      "field": "fieldState",
-                                      "fixed": "",
-                                      "mode": "field"
-                                  },
-                                  "textConfig": {
-                                      "fontSize": 10,
-                                      "offsetX": 30,
-                                      "offsetY": -10,
-                                      "textAlign": "center",
-                                      "textBaseline": "middle"
-                                  }
-                              }
-                          },
-                          "location": {
-                              "mode": "auto"
-                          },
-                          "name": "Layer 1",
-                          "tooltip": true,
-                          "type": "markers"
-                      }
-                  ],
-                  "tooltip": {
-                      "mode": "details"
-                  },
-                  "view": {
-                      "allLayers": true,
-                      "id": "coords",
-                      "lat": 46.2,
-                      "lon": 1.2,
-                      "noRepeat": false,
-                      "zoom": 14
-                  }
-              },
-              "pluginVersion": "12.3.1",
-              "targets": [
-                  {
-                      "columns": [
-                          {
-                              "selector": "id",
-                              "text": "entity_id",
-                              "type": "string"
-                          },
-                          {
-                              "selector": "latitude",
-                              "text": "latitude",
-                              "type": "number"
-                          },
-                          {
-                              "selector": "longitude",
-                              "text": "longitude",
-                              "type": "number"
-                          },
-                          {
-                              "selector": "fieldState",
-                              "text": "fieldState",
-                              "type": "string"
-                          },
-                          {
-                              "selector": "humidity",
-                              "text": "humidity",
-                              "type": "string"
-                          },
-                          {
-                              "selector": "temperature",
-                              "text": "temperature",
-                              "type": "string"
-                          }
-                      ],
-                      "datasource": {
-                          "type": "yesoreyeram-infinity-datasource",
-                          "uid": "OrionLive"
-                      },
-                      "filters": [],
-                      "format": "table",
-                      "global_query_id": "",
-                      "parser": "backend",
-                      "refId": "A",
-                      "root_selector": "",
-                      "source": "url",
-                      "type": "json",
-                      "url": "http://orion:1026/v2/entities",
-                      "url_options": {
-                          "data": "",
-                          "headers": [
-                              {
-                                  "key": "fiware-service",
-                                  "value": "openiot"
-                              },
-                              {
-                                  "key": "fiware-servicepath",
-                                  "value": "/"
-                              }
-                          ],
-                          "method": "GET",
-                          "params": [
-                              {
-                                  "key": "type",
-                                  "value": "Cluster"
-                              },
-                              {
-                                  "key": "options",
-                                  "value": "keyValues"
-                              },
-                              {
-                                  "key": "limit",
-                                  "value": "100"
-                              }
-                          ]
-                      }
-                  }
-              ],
-              "title": "Geomap FieldState Orion",
-              "type": "geomap"
-          },
-          {
-              "datasource": {
-                  "type": "grafana-postgresql-datasource",
-                  "uid": "CrateDB"
-              },
-              "fieldConfig": {
-                  "defaults": {
-                      "color": {
-                          "mode": "palette-classic"
-                      },
-                      "custom": {
-                          "axisBorderShow": false,
-                          "axisCenteredZero": false,
-                          "axisColorMode": "text",
-                          "axisLabel": "",
-                          "axisPlacement": "auto",
-                          "barAlignment": 0,
-                          "barWidthFactor": 0.6,
-                          "drawStyle": "line",
-                          "fillOpacity": 0,
-                          "gradientMode": "none",
-                          "hideFrom": {
-                              "legend": false,
-                              "tooltip": false,
-                              "viz": false
-                          },
-                          "insertNulls": false,
-                          "lineInterpolation": "linear",
-                          "lineWidth": 1,
-                          "pointSize": 5,
-                          "scaleDistribution": {
-                              "type": "linear"
-                          },
-                          "showPoints": "auto",
-                          "showValues": false,
-                          "spanNulls": false,
-                          "stacking": {
-                              "group": "A",
-                              "mode": "none"
-                          },
-                          "thresholdsStyle": {
-                              "mode": "off"
-                          }
-                      },
-                      "mappings": [],
-                      "thresholds": {
-                          "mode": "absolute",
-                          "steps": [
-                              {
-                                  "color": "green",
-                                  "value": 0
-                              },
-                              {
-                                  "color": "red",
-                                  "value": 80
-                              }
-                          ]
-                      }
-                  },
-                  "overrides": []
-              },
-              "gridPos": {
-                  "h": 8,
-                  "w": 12,
-                  "x": 12,
-                  "y": 0
-              },
-              "id": 1,
-              "options": {
-                  "legend": {
-                      "calcs": [],
-                      "displayMode": "list",
-                      "placement": "bottom",
-                      "showLegend": true
-                  },
-                  "tooltip": {
-                      "hideZeros": false,
-                      "mode": "single",
-                      "sort": "none"
-                  }
-              },
-              "pluginVersion": "12.3.1",
-              "targets": [
-                  {
-                      "dataset": "doc",
-                      "datasource": {
-                          "type": "grafana-postgresql-datasource",
-                          "uid": "CrateDB"
-                      },
-                      "editorMode": "code",
-                      "format": "table",
-                      "rawQuery": true,
-                      "rawSql": "SELECT timeInstant, humidity, soilmoisture, temperature, soiltemperature FROM mtopeniot.etcluster where entity_id ~ '.*' || '${SelectedCluster:regex}';",
-                      "refId": "A",
-                      "sql": {
-                          "columns": [
-                              {
-                                  "parameters": [],
-                                  "type": "function"
-                              }
-                          ],
-                          "groupBy": [
-                              {
-                                  "property": {
-                                      "type": "string"
-                                  },
-                                  "type": "groupBy"
-                              }
-                          ],
-                          "limit": 50
-                      },
-                      "table": "mtopeniot.etsensor"
-                  }
-              ],
-              "title": "view data from $SelectedCluster",
-              "type": "timeseries"
-          },
-          {
-              "datasource": {
-                  "type": "grafana-postgresql-datasource",
-                  "uid": "CrateDB"
-              },
-              "fieldConfig": {
-                  "defaults": {
-                      "color": {
-                          "fixedColor": "red",
-                          "mode": "continuous-GrYlRd"
-                      },
-                      "custom": {
-                          "hideFrom": {
-                              "legend": false,
-                              "tooltip": false,
-                              "viz": false
-                          }
-                      },
-                      "fieldMinMax": true,
-                      "mappings": [],
-                      "max": 30,
-                      "min": 15,
-                      "thresholds": {
-                          "mode": "absolute",
-                          "steps": [
-                              {
-                                  "color": "green",
-                                  "value": 0
-                              }
-                          ]
-                      },
-                      "unit": "celsius"
-                  },
-                  "overrides": []
-              },
-              "gridPos": {
-                  "h": 8,
-                  "w": 12,
-                  "x": 0,
-                  "y": 8
-              },
-              "id": 2,
-              "options": {
-                  "basemap": {
-                      "config": {
-                          "server": "streets",
-                          "showLabels": true,
-                          "theme": "auto"
-                      },
-                      "name": "Layer 0",
-                      "noRepeat": false,
-                      "opacity": 0.7,
-                      "type": "carto"
-                  },
-                  "controls": {
-                      "mouseWheelZoom": true,
-                      "showAttribution": true,
-                      "showDebug": false,
-                      "showMeasure": false,
-                      "showScale": false,
-                      "showZoom": true
-                  },
-                  "layers": [
-                      {
-                          "config": {
-                              "showLegend": false,
-                              "style": {
-                                  "color": {
-                                      "field": "avg",
-                                      "fixed": "dark-green"
-                                  },
-                                  "opacity": 0.8,
-                                  "rotation": {
-                                      "field": "avg",
-                                      "fixed": 0,
-                                      "max": 360,
-                                      "min": -360,
-                                      "mode": "mod"
-                                  },
-                                  "size": {
-                                      "fixed": 8,
-                                      "max": 15,
-                                      "min": 2
-                                  },
-                                  "symbol": {
-                                      "fixed": "img/icons/marker/circle.svg",
-                                      "mode": "fixed"
-                                  },
-                                  "symbolAlign": {
-                                      "horizontal": "center",
-                                      "vertical": "center"
-                                  },
-                                  "text": {
-                                      "field": "avg",
-                                      "fixed": "",
-                                      "mode": "field"
-                                  },
-                                  "textConfig": {
-                                      "fontSize": 12,
-                                      "offsetX": 30,
-                                      "offsetY": 0,
-                                      "textAlign": "center",
-                                      "textBaseline": "middle"
-                                  }
-                              }
-                          },
-                          "filterData": {
-                              "id": "byRefId",
-                              "options": "A"
-                          },
-                          "layer-tooltip": true,
-                          "name": "Layer 1",
-                          "tooltip": true,
-                          "type": "markers"
-                      }
-                  ],
-                  "tooltip": {
-                      "mode": "details"
-                  },
-                  "view": {
-                      "allLayers": true,
-                      "id": "coords",
-                      "lastOnly": false,
-                      "lat": 46.2,
-                      "layer": "Layer 1",
-                      "lon": 1.2,
-                      "noRepeat": false,
-                      "zoom": 14
-                  }
-              },
-              "pluginVersion": "12.3.1",
-              "targets": [
-                  {
-                      "dataset": "doc",
-                      "editorMode": "code",
-                      "format": "table",
-                      "rawQuery": true,
-                      "rawSql": "select entity_id, longitude, latitude, AVG(temperature)\r\nfrom mtopeniot.etcluster \r\ngroup by entity_id, longitude, latitude;",
-                      "refId": "A",
-                      "sql": {
-                          "columns": [
-                              {
-                                  "parameters": [],
-                                  "type": "function"
-                              }
-                          ],
-                          "groupBy": [
-                              {
-                                  "property": {
-                                      "type": "string"
-                                  },
-                                  "type": "groupBy"
-                              }
-                          ],
-                          "limit": 50
-                      }
-                  }
-              ],
-              "title": "Temperature Geomap",
-              "type": "geomap"
-          }
-      ],
-      "preload": false,
-      "schemaVersion": 42,
-      "tags": [],
-      "templating": {
-          "list": [
-              {
-                  "current": {
-                      "text": [
-                          "cluster_01"
-                      ],
-                      "value": [
-                          "cluster_01"
-                      ]
-                  },
-                  "definition": "select distinct entity_id from mtopeniot.etcluster order by entity_id asc",
-                  "includeAll": true,
-                  "label": "SelectedCluster",
-                  "multi": true,
-                  "name": "SelectedCluster",
-                  "options": [],
-                  "query": "select distinct entity_id from mtopeniot.etcluster order by entity_id asc",
-                  "refresh": 2,
-                  "regex": "/.*:([^:]*)$/",
-                  "type": "query"
-              }
-          ]
-      },
-      "time": {
-          "from": "now-5m",
-          "to": "now"
-      },
-      "timepicker": {},
-      "timezone": "browser",
-      "title": "data",
-      "uid": "advlchc",
-      "version": 1
+        "annotations": {
+            "list": [
+                {
+                    "builtIn": 1,
+                    "datasource": {
+                        "type": "grafana",
+                        "uid": "-- Grafana --"
+                    },
+                    "enable": true,
+                    "hide": true,
+                    "iconColor": "rgba(0, 211, 255, 1)",
+                    "name": "Annotations & Alerts",
+                    "type": "dashboard"
+                }
+            ]
+        },
+        "editable": true,
+        "fiscalYearStartMonth": 0,
+        "graphTooltip": 0,
+        "id": 1,
+        "links": [],
+        "panels": [
+            {
+                "datasource": {
+                    "type": "yesoreyeram-infinity-datasource",
+                    "uid": "OrionLive"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "custom": {
+                            "hideFrom": {
+                                "legend": false,
+                                "tooltip": false,
+                                "viz": false
+                            }
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "ACTIVE": {
+                                        "color": "semi-dark-green",
+                                        "index": 0
+                                    },
+                                    "ERROR_BROKEN": {
+                                        "color": "red",
+                                        "index": 2
+                                    },
+                                    "ERROR_FREEZE": {
+                                        "color": "light-blue",
+                                        "index": 1
+                                    }
+                                },
+                                "type": "value"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": 0
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 5,
+                "options": {
+                    "basemap": {
+                        "config": {},
+                        "name": "Layer 0",
+                        "noRepeat": false,
+                        "type": "default"
+                    },
+                    "controls": {
+                        "mouseWheelZoom": true,
+                        "showAttribution": true,
+                        "showDebug": false,
+                        "showMeasure": false,
+                        "showScale": false,
+                        "showZoom": true
+                    },
+                    "layers": [
+                        {
+                            "config": {
+                                "showLegend": false,
+                                "style": {
+                                    "color": {
+                                        "field": "state",
+                                        "fixed": "dark-green"
+                                    },
+                                    "opacity": 0.8,
+                                    "rotation": {
+                                        "fixed": 0,
+                                        "max": 360,
+                                        "min": -360,
+                                        "mode": "mod"
+                                    },
+                                    "size": {
+                                        "fixed": 7,
+                                        "max": 15,
+                                        "min": 2
+                                    },
+                                    "symbol": {
+                                        "fixed": "img/icons/marker/circle.svg",
+                                        "mode": "fixed"
+                                    },
+                                    "symbolAlign": {
+                                        "horizontal": "center",
+                                        "vertical": "center"
+                                    },
+                                    "text": {
+                                        "field": "state",
+                                        "fixed": "",
+                                        "mode": "field"
+                                    },
+                                    "textConfig": {
+                                        "fontSize": 10,
+                                        "offsetX": 30,
+                                        "offsetY": -13,
+                                        "textAlign": "center",
+                                        "textBaseline": "middle"
+                                    }
+                                }
+                            },
+                            "layer-tooltip": false,
+                            "location": {
+                                "mode": "auto"
+                            },
+                            "name": "Layer 1",
+                            "tooltip": true,
+                            "type": "markers"
+                        }
+                    ],
+                    "tooltip": {
+                        "mode": "details"
+                    },
+                    "view": {
+                        "allLayers": true,
+                        "id": "coords",
+                        "lat": 46.2,
+                        "lon": 1.2,
+                        "noRepeat": false,
+                        "zoom": 14
+                    }
+                },
+                "pluginVersion": "12.3.1",
+                "targets": [
+                    {
+                        "columns": [
+                            {
+                                "selector": "latitude",
+                                "text": "",
+                                "type": "number"
+                            },
+                            {
+                                "selector": "longitude",
+                                "text": "",
+                                "type": "number"
+                            },
+                            {
+                                "selector": "id",
+                                "text": "",
+                                "type": "string"
+                            },
+                            {
+                                "selector": "state",
+                                "text": "",
+                                "type": "string"
+                            }
+                        ],
+                        "datasource": {
+                            "type": "yesoreyeram-infinity-datasource",
+                            "uid": "OrionLive"
+                        },
+                        "filters": [],
+                        "format": "table",
+                        "global_query_id": "",
+                        "parser": "backend",
+                        "refId": "A",
+                        "root_selector": "",
+                        "source": "url",
+                        "type": "json",
+                        "url": "http://orion:1026/v2/entities",
+                        "url_options": {
+                            "data": "",
+                            "headers": [
+                                {
+                                    "key": "fiware-service",
+                                    "value": "openiot"
+                                },
+                                {
+                                    "key": "fiware-servicepath",
+                                    "value": "/"
+                                }
+                            ],
+                            "method": "GET",
+                            "params": [
+                                {
+                                    "key": "type",
+                                    "value": "Cluster"
+                                },
+                                {
+                                    "key": "options",
+                                    "value": "keyValues"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "title": "Cluster technical state Geomap Orion",
+                "type": "geomap"
+            },
+            {
+                "datasource": {
+                    "type": "yesoreyeram-infinity-datasource",
+                    "uid": "OrionLive"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "custom": {
+                            "hideFrom": {
+                                "legend": false,
+                                "tooltip": false,
+                                "viz": false
+                            }
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "0": {
+                                        "color": "semi-dark-orange",
+                                        "index": 0,
+                                        "text": "Sec"
+                                    },
+                                    "1": {
+                                        "color": "dark-green",
+                                        "index": 1,
+                                        "text": "Humide"
+                                    },
+                                    "2": {
+                                        "color": "super-light-orange",
+                                        "index": 2,
+                                        "text": "Standard"
+                                    }
+                                },
+                                "type": "value"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": 0
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 4,
+                "options": {
+                    "basemap": {
+                        "config": {},
+                        "name": "Layer 0",
+                        "noRepeat": false,
+                        "type": "default"
+                    },
+                    "controls": {
+                        "mouseWheelZoom": true,
+                        "showAttribution": true,
+                        "showDebug": false,
+                        "showMeasure": false,
+                        "showScale": false,
+                        "showZoom": true
+                    },
+                    "layers": [
+                        {
+                            "config": {
+                                "showLegend": false,
+                                "style": {
+                                    "color": {
+                                        "field": "fieldState",
+                                        "fixed": "dark-green"
+                                    },
+                                    "opacity": 0.8,
+                                    "rotation": {
+                                        "fixed": 0,
+                                        "max": 360,
+                                        "min": -360,
+                                        "mode": "mod"
+                                    },
+                                    "size": {
+                                        "fixed": 7,
+                                        "max": 15,
+                                        "min": 2
+                                    },
+                                    "symbol": {
+                                        "fixed": "img/icons/marker/circle.svg",
+                                        "mode": "fixed"
+                                    },
+                                    "symbolAlign": {
+                                        "horizontal": "center",
+                                        "vertical": "center"
+                                    },
+                                    "text": {
+                                        "field": "fieldState",
+                                        "fixed": "",
+                                        "mode": "field"
+                                    },
+                                    "textConfig": {
+                                        "fontSize": 10,
+                                        "offsetX": 30,
+                                        "offsetY": -10,
+                                        "textAlign": "center",
+                                        "textBaseline": "middle"
+                                    }
+                                }
+                            },
+                            "location": {
+                                "mode": "auto"
+                            },
+                            "name": "Layer 1",
+                            "tooltip": true,
+                            "type": "markers"
+                        }
+                    ],
+                    "tooltip": {
+                        "mode": "details"
+                    },
+                    "view": {
+                        "allLayers": true,
+                        "id": "coords",
+                        "lat": 46.2,
+                        "lon": 1.2,
+                        "noRepeat": false,
+                        "zoom": 14
+                    }
+                },
+                "pluginVersion": "12.3.1",
+                "targets": [
+                    {
+                        "columns": [
+                            {
+                                "selector": "id",
+                                "text": "entity_id",
+                                "type": "string"
+                            },
+                            {
+                                "selector": "latitude",
+                                "text": "latitude",
+                                "type": "number"
+                            },
+                            {
+                                "selector": "longitude",
+                                "text": "longitude",
+                                "type": "number"
+                            },
+                            {
+                                "selector": "fieldState",
+                                "text": "fieldState",
+                                "type": "string"
+                            },
+                            {
+                                "selector": "humidity",
+                                "text": "humidity",
+                                "type": "string"
+                            },
+                            {
+                                "selector": "temperature",
+                                "text": "temperature",
+                                "type": "string"
+                            }
+                        ],
+                        "datasource": {
+                            "type": "yesoreyeram-infinity-datasource",
+                            "uid": "OrionLive"
+                        },
+                        "filters": [],
+                        "format": "table",
+                        "global_query_id": "",
+                        "parser": "backend",
+                        "refId": "A",
+                        "root_selector": "",
+                        "source": "url",
+                        "type": "json",
+                        "url": "http://orion:1026/v2/entities",
+                        "url_options": {
+                            "data": "",
+                            "headers": [
+                                {
+                                    "key": "fiware-service",
+                                    "value": "openiot"
+                                },
+                                {
+                                    "key": "fiware-servicepath",
+                                    "value": "/"
+                                }
+                            ],
+                            "method": "GET",
+                            "params": [
+                                {
+                                    "key": "type",
+                                    "value": "Cluster"
+                                },
+                                {
+                                    "key": "options",
+                                    "value": "keyValues"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "title": "Geomap FieldState Orion",
+                "type": "geomap"
+            },
+            {
+                "datasource": {
+                    "type": "grafana-postgresql-datasource",
+                    "uid": "CrateDB"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "palette-classic"
+                        },
+                        "custom": {
+                            "axisBorderShow": false,
+                            "axisCenteredZero": false,
+                            "axisColorMode": "text",
+                            "axisLabel": "",
+                            "axisPlacement": "auto",
+                            "barAlignment": 0,
+                            "barWidthFactor": 0.6,
+                            "drawStyle": "line",
+                            "fillOpacity": 0,
+                            "gradientMode": "none",
+                            "hideFrom": {
+                                "legend": false,
+                                "tooltip": false,
+                                "viz": false
+                            },
+                            "insertNulls": false,
+                            "lineInterpolation": "linear",
+                            "lineWidth": 1,
+                            "pointSize": 5,
+                            "scaleDistribution": {
+                                "type": "linear"
+                            },
+                            "showPoints": "auto",
+                            "showValues": false,
+                            "spanNulls": false,
+                            "stacking": {
+                                "group": "A",
+                                "mode": "none"
+                            },
+                            "thresholdsStyle": {
+                                "mode": "off"
+                            }
+                        },
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": 0
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 12,
+                    "y": 0
+                },
+                "id": 1,
+                "options": {
+                    "legend": {
+                        "calcs": [],
+                        "displayMode": "list",
+                        "placement": "bottom",
+                        "showLegend": true
+                    },
+                    "tooltip": {
+                        "hideZeros": false,
+                        "mode": "single",
+                        "sort": "none"
+                    }
+                },
+                "pluginVersion": "12.3.1",
+                "targets": [
+                    {
+                        "dataset": "doc",
+                        "datasource": {
+                            "type": "grafana-postgresql-datasource",
+                            "uid": "CrateDB"
+                        },
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT timeInstant, humidity, soilmoisture, temperature, soiltemperature FROM mtopeniot.etcluster where entity_id ~ '.*' || '${SelectedCluster:regex}';",
+                        "refId": "A",
+                        "sql": {
+                            "columns": [
+                                {
+                                    "parameters": [],
+                                    "type": "function"
+                                }
+                            ],
+                            "groupBy": [
+                                {
+                                    "property": {
+                                        "type": "string"
+                                    },
+                                    "type": "groupBy"
+                                }
+                            ],
+                            "limit": 50
+                        },
+                        "table": "mtopeniot.etsensor"
+                    }
+                ],
+                "title": "view data from $SelectedCluster",
+                "type": "timeseries"
+            },
+            {
+                "datasource": {
+                    "type": "grafana-postgresql-datasource",
+                    "uid": "CrateDB"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "fixedColor": "red",
+                            "mode": "continuous-GrYlRd"
+                        },
+                        "custom": {
+                            "hideFrom": {
+                                "legend": false,
+                                "tooltip": false,
+                                "viz": false
+                            }
+                        },
+                        "fieldMinMax": true,
+                        "mappings": [],
+                        "max": 30,
+                        "min": 15,
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": 0
+                                }
+                            ]
+                        },
+                        "unit": "celsius"
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 8
+                },
+                "id": 2,
+                "options": {
+                    "basemap": {
+                        "config": {
+                            "server": "streets",
+                            "showLabels": true,
+                            "theme": "auto"
+                        },
+                        "name": "Layer 0",
+                        "noRepeat": false,
+                        "opacity": 0.7,
+                        "type": "carto"
+                    },
+                    "controls": {
+                        "mouseWheelZoom": true,
+                        "showAttribution": true,
+                        "showDebug": false,
+                        "showMeasure": false,
+                        "showScale": false,
+                        "showZoom": true
+                    },
+                    "layers": [
+                        {
+                            "config": {
+                                "showLegend": false,
+                                "style": {
+                                    "color": {
+                                        "field": "avg",
+                                        "fixed": "dark-green"
+                                    },
+                                    "opacity": 0.8,
+                                    "rotation": {
+                                        "field": "avg",
+                                        "fixed": 0,
+                                        "max": 360,
+                                        "min": -360,
+                                        "mode": "mod"
+                                    },
+                                    "size": {
+                                        "fixed": 8,
+                                        "max": 15,
+                                        "min": 2
+                                    },
+                                    "symbol": {
+                                        "fixed": "img/icons/marker/circle.svg",
+                                        "mode": "fixed"
+                                    },
+                                    "symbolAlign": {
+                                        "horizontal": "center",
+                                        "vertical": "center"
+                                    },
+                                    "text": {
+                                        "field": "avg",
+                                        "fixed": "",
+                                        "mode": "field"
+                                    },
+                                    "textConfig": {
+                                        "fontSize": 12,
+                                        "offsetX": 30,
+                                        "offsetY": 0,
+                                        "textAlign": "center",
+                                        "textBaseline": "middle"
+                                    }
+                                }
+                            },
+                            "filterData": {
+                                "id": "byRefId",
+                                "options": "A"
+                            },
+                            "layer-tooltip": true,
+                            "name": "Layer 1",
+                            "tooltip": true,
+                            "type": "markers"
+                        }
+                    ],
+                    "tooltip": {
+                        "mode": "details"
+                    },
+                    "view": {
+                        "allLayers": true,
+                        "id": "coords",
+                        "lastOnly": false,
+                        "lat": 46.2,
+                        "layer": "Layer 1",
+                        "lon": 1.2,
+                        "noRepeat": false,
+                        "zoom": 14
+                    }
+                },
+                "pluginVersion": "12.3.1",
+                "targets": [
+                    {
+                        "dataset": "doc",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "select entity_id, longitude, latitude, AVG(temperature)\r\nfrom mtopeniot.etcluster \r\ngroup by entity_id, longitude, latitude;",
+                        "refId": "A",
+                        "sql": {
+                            "columns": [
+                                {
+                                    "parameters": [],
+                                    "type": "function"
+                                }
+                            ],
+                            "groupBy": [
+                                {
+                                    "property": {
+                                        "type": "string"
+                                    },
+                                    "type": "groupBy"
+                                }
+                            ],
+                            "limit": 50
+                        }
+                    }
+                ],
+                "title": "Temperature Geomap",
+                "type": "geomap"
+            }
+        ],
+        "preload": false,
+        "schemaVersion": 42,
+        "tags": [],
+        "templating": {
+            "list": [
+                {
+                    "current": {
+                        "text": [
+                            "cluster_01"
+                        ],
+                        "value": [
+                            "cluster_01"
+                        ]
+                    },
+                    "definition": "select distinct entity_id from mtopeniot.etcluster order by entity_id asc",
+                    "includeAll": true,
+                    "label": "SelectedCluster",
+                    "multi": true,
+                    "name": "SelectedCluster",
+                    "options": [],
+                    "query": "select distinct entity_id from mtopeniot.etcluster order by entity_id asc",
+                    "refresh": 2,
+                    "regex": "/.*:([^:]*)$/",
+                    "type": "query"
+                }
+            ]
+        },
+        "time": {
+            "from": "now-5m",
+            "to": "now"
+        },
+        "timepicker": {},
+        "timezone": "browser",
+        "title": "data",
+        "uid": "advlchc",
+        "version": 1
     }
