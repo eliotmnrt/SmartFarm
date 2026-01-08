@@ -187,6 +187,16 @@ data:
                               "selector": "fieldState",
                               "text": "fieldState",
                               "type": "string"
+                          },
+                          {
+                              "selector": "humidity",
+                              "text": "humidity",
+                              "type": "string"
+                          },
+                          {
+                              "selector": "temperature",
+                              "text": "temperature",
+                              "type": "string"
                           }
                       ],
                       "datasource": {
@@ -349,7 +359,7 @@ data:
                       "table": "mtopeniot.etsensor"
                   }
               ],
-              "title": "view data",
+              "title": "view data from $SelectedCluster",
               "type": "timeseries"
           },
           {

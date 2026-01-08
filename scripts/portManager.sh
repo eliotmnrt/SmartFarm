@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # FONCTION : OUVRIR LES TUNNELS (start_port_forwards)
 # ==========================================
 start_port_forwards() {
-    local NAMESPACE=$1
+    local NAMESPACE="fiware-platform"
     echo -e "${YELLOW}🔌 Mise en place des tunnels (Port-Forwarding)...${NC}"
 
     if [ -f "$PID_FILE" ]; then
@@ -135,8 +135,7 @@ ACTION=$1
 
 case "$ACTION" in
     start)
-        # Nécessite le namespace en argument 2
-        start_port_forwards $2
+        start_port_forwards
         ;;
     stop)
         close_port_forwards
@@ -145,7 +144,7 @@ case "$ACTION" in
         status_port_forwards
         ;;
     *)
-        echo "Usage: $0 {start <namespace> | stop | status}"
+        echo "Usage: $0 {start | stop | status}"
         exit 1
         ;;
 esac

@@ -1,44 +1,55 @@
-
------
-
 # 🌾 SmartFarm - Plateforme IoT FIWARE sur Kubernetes
 
-**SmartFarm** est une plateforme IoT cloud-native dédiée à l'agriculture intelligente ("Smart Agriculture"). Elle permet la collecte, le traitement, l'historisation et la visualisation de données de capteurs (Température, Humidité, Pression, Sol, etc.) en utilisant l'écosystème **FIWARE** standardisé.
+**SmartFarm** est une plateforme IoT cloud-native dédiée à l'agriculture intelligente. Elle orchestre le cycle de vie complet des données agricoles : de la collecte simulée de capteurs géolocalisés à la prise de décision automatisée, en passant par l'analyse par Intelligence Artificielle.
 
-L'infrastructure est déployée sur **Kubernetes** et sécurisée/gérée par **Istio** (Service Mesh).
+L'infrastructure est bâtie sur l'écosystème **FIWARE** standardisé, déployée sur **Kubernetes** et sécurisée par **Istio**.
 
------
+---
 
 ## 🏗️ Architecture
 
-Le système repose sur une architecture micro-services :
+Le système repose sur une architecture micro-services avancée :
 
-  * **Ingestion IoT** :
-      * [cite\_start]**IoT Agent (JSON)** : Bridge pour connecter les appareils HTTP/MQTT au format NGSI[cite: 188].
-  * **Gestion de Contexte** :
-      * [cite\_start]**Orion Context Broker** : Cœur de la plateforme, gère l'état actuel des entités (Digital Twins)[cite: 221].
-      * [cite\_start]**MongoDB** : Base de données pour Orion et l'IoT Agent[cite: 201].
-  * **Historisation (Time-Series)** :
-      * [cite\_start]**QuantumLeap** : Persiste les données historiques géospatiales et temporelles[cite: 235].
-      * [cite\_start]**CrateDB** : Base de données SQL orientée Time-Series pour le stockage long terme[cite: 138].
-  * **Visualisation** :
-      * [cite\_start]**Grafana** : Tableaux de bord pour visualiser les données agronomiques via CrateDB[cite: 173].
-  * **Infrastructure** :
-      * **Kubernetes** : Orchestration des conteneurs.
-      * [cite\_start]**Istio** : Gestion du trafic, Ingress Gateway et sécurité mTLS[cite: 247, 248].
+### 1. Couche Ingestion & Context (Core)
+* **IoT Agent (JSON)** : Passerelle pour connecter les capteurs (HTTP) au format NGSI standard.
+* **Orion Context Broker** : Cœur de la plateforme. Gère l'état actuel des entités (Digital Twins) et notifie les abonnés.
+* **MongoDB** : Base de données persistante pour Orion et l'IoT Agent.
 
------
+### 2. Couche Historisation (Time-Series)
+* **QuantumLeap** : Convertit les données NGSI en séries temporelles.
+* **CrateDB** : Base de données SQL distribuée pour le stockage long terme et les requêtes géospatiales.
+
+### 3. Couche Intelligence & Décision (Smart Logic)
+* **🤖 AI Service** : Service Python qui analyse l'historique (CrateDB) pour déterminer l'état de santé des champs (Sec, Humide, Standard) via des algorithmes de classification.
+* **🧠 Decision Service** : Boucle de contrôle temps-réel qui interroge Orion, analyse la proportion d'états par zone et envoie des ordres d'irrigation (`irrigationRecommendation`) aux clusters.
+
+### 4. Couche Visualisation
+* **Grafana** : Tableaux de bord hybrides.
+    * *Historique* via **CrateDB** (SQL).
+    * *Temps Réel* via **Infinity** (Appel API direct vers Orion).
+
+### 5. Infrastructure
+* **Kubernetes** : Orchestration.
+* **Istio** : Service Mesh (mTLS, Gateway, Observabilité).
+
+---
 
 ## 📋 Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé :
+* **Kubernetes Cluster** : Docker Desktop (cluster Kubernetes activé) ou Minikube ou K3s.
+* **Kubectl** configuré.
+* **Istio** 1.28 installé sur le cluster (voir [Istio Docs](https://istio.io/latest/docs/setup/additional-setup/download-istio-release/)). Pour des raisons de simplicité, l'installation devra etre dans `~/istio/istio-1.28.0` (ou adaptez le script `redeploy.sh`). Puis lancez :
+  ```bash
+  istioctl install
+  istioctl verify-install
+  ```
+  N'oubliez pas d'ajouter le `istioctl` à votre PATH: 
+  ```bash
+  export PATH=$PATH:~/istio/istio-1.28.0/bin
+  ```
+* **Python 3.9+** (pour la gateway de simulation).
 
-1.  **Kubernetes Cluster** (Docker Desktop, Minikube, ou K3s).
-2.  **kubectl** (CLI Kubernetes configurée).
-3.  **Istio** (installé sur le cluster ou via `istioctl` dans le même repertoire que le script redeploy.sh).
-4.  **Outils CLI** : `curl`, `jq` (pour les scripts).
-
------
+---
 
 ## 🚀 Installation et Déploiement
 
@@ -52,17 +63,16 @@ kubectl cluster-info
 
 ### 2\. Déploiement des Services (Infrastructure)
 
-[cite\_start]Utilisez le script `redeploy.sh` pour déployer l'ensemble de la stack dans l'ordre correct (Namespace -\> Istio -\> DBs -\> Apps)[cite: 268].
+Utilisez le script `redeploy.sh` pour déployer l'ensemble de la stack dans l'ordre correct (Namespace -\> Istio -\> DBs -\> Apps).
 
 ```bash
-cd eliotmnrt-smartfarm
 chmod +x scripts/*.sh
 ./scripts/redeploy.sh
 ```
 
-*Ce script va :*
+Ce script va :
 
-1.  [cite\_start]Créer le namespace `fiware-platform` avec l'injection Istio activée[cite: 137].
+1.  Créer le namespace `fiware-platform` avec l'injection Istio activée.
 2.  Déployer les bases de données (MongoDB, CrateDB, InfluxDB).
 3.  Déployer les composants FIWARE (Orion, IoT Agent, QuantumLeap).
 4.  Déployer Grafana avec les sources de données pré-configurées.
@@ -72,16 +82,16 @@ chmod +x scripts/*.sh
 Vérifiez que tous les pods sont en statut `Running` (1/1 ou 2/2 si Istio sidecar est actif).
 
 ```bash
-kubectl get pods -n fiware-platform
+./scripts/status.sh
 ```
 
 -----
 
 ## ⚙️ Setup et Configuration (Provisioning)
 
-Une fois les pods démarrés, il faut configurer la logique métier (créer les groupes de services, déclarer les capteurs et activer l'historisation).
+Une fois les pods démarrés, il faut configurer la logique métier (créer les groupes de services et activer l'historisation).
 
-Le script `setup.sh` automatise cette étape critique.
+Le script `setup.sh` automatise cette étape.
 
 ### Lancer le Setup
 
@@ -89,12 +99,10 @@ Le script `setup.sh` automatise cette étape critique.
 ./scripts/setup.sh
 ```
 
-[cite\_start]**Ce que fait ce script [cite: 275-285] :**
+**Ce que fait ce script [cite: 275-285] :**
 
-1.  **Port-Forwarding** : Ouvre des tunnels temporaires vers Orion (:1026), IoT Agent (:4041/:7896) et Grafana (:3000) pour permettre la configuration depuis votre machine locale.
-2.  **Service Group** : Configure l'IoT Agent pour accepter les données avec l'API Key.
-3.  **Device Provisioning** : Crée le capteur `sensor001` et le lie explicitement à l'entité `urn:ngsi-ld:Sensor:001` pour éviter les doublons.
-4.  [cite\_start]**Subscription** : Crée une souscription dans Orion pour que tout changement sur un capteur soit envoyé à **QuantumLeap** pour archivage[cite: 281].
+1.  **Port-Forwarding** : Ouvre des tunnels temporaires vers Orion (:1026), IoT Agent (:4041/:7896), CrateDB (:4200) et Grafana (:3000) pour permettre l'accès et la configuration depuis votre machine locale.
+2.  **Subscription** : Crée une souscription dans Orion pour que tout changement sur un capteur soit envoyé à **QuantumLeap** pour archivage. Crée une une autre souscription pour notifier le service de classification AI à chaque mise à jour de capteur.
 
 -----
 
@@ -102,22 +110,42 @@ Le script `setup.sh` automatise cette étape critique.
 
 ### 1\. Simulation de Données (Capteurs)
 
-Pour tester le flux de données, utilisez le script de simulation qui envoie des relevés de température/humidité aléatoires.
+Pour tester le flux de données, utilisez le script de simulation de la gateway qui envoie des relevés à Fiware.
+Assurez-vous d'avoir effectué le setup avant de lancer la simulation.
 
 ```bash
-./scripts/send-data.sh
+cd gateway
+pip install -r requirements.txt
+python cleaner.py
 ```
 
-[cite\_start]*Le script envoie une requête POST HTTP au port Sud de l'IoT Agent (:7896) toutes les 5 secondes[cite: 273].*
+Ce que fait ce script python:
+- **Provisioning Automatique** : Vérifie si les capteurs existent dans Orion. Sinon, il les crée avec leur géolocalisation GPS précise (attribut location).
+- **Nettoyage de Données** : Lit des données brutes (sensor_data_raw_dirty.csv), détecte les erreurs, lisse les valeurs aberrantes.
+- **Envoi IoT** : Envoie les données propres à l'IoT Agent pour simuler les relevés des capteurs
 
-### 2\. Visualisation (Grafana)
+
+### 2\. Intelligence & Décision
+Le système tourne en autonomie grâce à deux boucles de rétroaction :
+
+**AI Service (Analyse)** :
+- Écoute les notifications d'Orion.
+- Calcule l'etat de chaque cluster (0: Sec, 1: Humide, 2: Standard).
+- Met à jour l'attribut fieldState du capteur.
+
+**Decision Service (Action)** :
+- Scanne l'état des zones directement dans orion toutes les 10 secondes.
+- Si un seuil de sécheresse defini (default : >20%) est dépassé, envoie l'ordre START_IRRIGATION via l'attribut irrigationRecommendation
+
+
+### 3\. Visualisation (Grafana)
 
 Accédez à Grafana pour voir les données en temps réel et l'historique.
 
-  * **URL** : [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) (Assurez-vous que le port-forward est actif via `./scripts/start.sh` ou manuellement).
+  * **URL** : [http://localhost:3000](http://localhost:3000) (Assurez-vous que le port-forward est actif via `./scripts/portManager.sh status` ou manuellement).
   * **Login** : `admin`
-  * [cite\_start]**Mot de passe** : `admin` [cite: 173]
-  * **Dashboard** : Allez dans *Dashboards* \> *Smart Farm Monitor*. [cite\_start]Le dashboard est pré-chargé via le provisioning Kubernetes[cite: 174].
+  * **Mot de passe** : `admin`
+  * **Dashboard** : Allez dans *Dashboards* \> *data*. Le dashboard est pré-chargé via le provisioning Kubernetes.
 
 -----
 
@@ -131,8 +159,11 @@ Le dossier `scripts/` contient tous les utilitaires nécessaires :
 | `./scripts/setup.sh` | [cite\_start]**Configuration logique.** Provisionne les devices et souscriptions via l'API[cite: 275]. |
 | `./scripts/start.sh` | [cite\_start]Démarre la plateforme (Scale up) et active les port-forwards[cite: 286]. |
 | `./scripts/stop.sh` | [cite\_start]Arrête la plateforme (Scale down à 0 replicas) pour économiser les ressources[cite: 287]. |
-| `./scripts/send-data.sh` | [cite\_start]Simule un capteur IoT envoyant des données[cite: 272]. |
+| `./scripts/send-data.py` | [cite\_start]Simule un capteur IoT envoyant des données[cite: 272]. |
 | `./scripts/cleanup.sh` | Supprime toutes les ressources du cluster (Nettoyage total). |
+| `./scripts/emptyDB.py` | Supprime toutes les données des DB Mongo(Orion) et CrateDB(Quantum Leap) (Nettoyage total). |
+| `./scripts/portManager.sh` | Gère les port-forwards (start, stop, status). |
+
 
 -----
 
@@ -140,17 +171,24 @@ Le dossier `scripts/` contient tous les utilitaires nécessaires :
 
 ```text
 eliotmnrt-smartfarm/
+├── docker/
+│   ├── serviceIA/              # Micro-service d'analyse (Modèle Sklearn)
+│   └── serviceDecision/        # Micro-service de décision (Logique métier)
+├── gateway/
+│   ├── cleaner.py              # Gateway de simulation et nettoyage de données
+│   └── trasher.py              # Générateur de chaos (données sales)
 ├── k8s/
-│   ├── base/               # Manifestes Kubernetes de base
-│   │   ├── namespace.yaml
-│   │   ├── orion/          # Context Broker
-│   │   ├── iot-agent/      # Bridge IoT (HTTP/JSON)
-│   │   ├── quantumleap/    # Time-Series Persister
-│   │   ├── cratedb/        # DB Historique
-│   │   ├── mongodb/        # DB Entités
-│   │   └── grafana/        # Visualisation & Dashboards
-│   └── istio/              # Configuration Service Mesh (Gateway, mTLS)
-└── scripts/                # Scripts d'automatisation (Bash)
+│   ├── base/                   # Manifestes YAML (Deployment, Svc, PVC)
+│   │   ├── ai-service/         # Deploiement du service IA dockerisé
+│   │   ├── decision-service/   # Deploiement du service Decision dockerisé
+│   │   ├── iot-agent/          # FIWARE IoT Agent (JSON)
+│   │   ├── cratedb/            # CrateDB pour QuantumLeap
+│   │   ├── mongodb/            # MongoDB pour Orion
+│   │   ├── orion/              # FIWARE Orion Context Broker
+│   │   ├── quantumleap/        # FIWARE QuantumLeap
+│   │   └── grafana/            # ConfigMaps Datasources & Dashboards
+│   └── istio/                  # Gateway & VirtualServices & Policies Istio
+└── scripts/                    # Automatisation Bash
 ```
 
 -----
@@ -173,3 +211,32 @@ eliotmnrt-smartfarm/
 
   * Vérifiez que le script `send-data.sh` tourne.
   * Vérifiez que la datasource CrateDB est bien configurée (Testez la connexion dans Grafana).
+
+
+**Le script cleaner.py n'arrive pas à se connecter**
+
+  * Vérifiez que les tunnels sont ouverts : lancez ./scripts/portManager.sh start.
+
+
+
+**Les services IA/Décision ne semblent pas réagir**
+
+  * Vérifiez les logs : kubectl logs -l app=ai-service -n fiware-platform.
+  * Assurez-vous que les souscriptions dans Orion ont bien été créées via setup.sh.
+  * Note : Le service décision est en mode "INFO" par défaut et ne loggue que les changements d'état majeurs pour éviter le bruit.
+
+**Grafana affiche "No Data"**
+
+  * Assurez-vous que le script cleaner.py tourne pour alimenter Orion et CrateDB.
+  * Vérifiez que la souscription QuantumLeap a bien été créée via setup.sh.
+
+
+
+## ❓ Utilisation de l'IA générative dans le projet
+
+Des outils d'IA générative ont été employés pour :
+- Générer la base de scripts d'automatisation en bash.
+- Générer la base de fichiers python pour le traitement des données.
+- Debuggage
+
+
