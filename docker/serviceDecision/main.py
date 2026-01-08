@@ -24,7 +24,7 @@ CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", 10))  # en secondes
 ZONES = {
     "Champ_Nord": ["cluster_07", "cluster_08", "cluster_09", "cluster_10"],
     "Champ_Sud":  ["cluster_01", "cluster_02", "cluster_03", "cluster_04", "cluster_05"],
-    "Serre_Lac":  ["cluster_06"]
+    "Champ_Lac":  ["cluster_06"]
 }
 
 THRESHOLD_DRY = float(os.environ.get("THRESHOLD_DRY", 0.20))      # > 20% Sec (0)
@@ -54,7 +54,6 @@ def get_realtime_states():
 
 def send_alert(zone_name, action, clusters):
     """Envoie l'ordre à Orion"""
-    # INFO : On veut voir ça dans Kiali
     logger.info(f"🚨 DÉCISION {zone_name} : {action}")
     
     timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -117,7 +116,6 @@ def run_decision_cycle():
             ratio_sec = count_sec / total_sensors
             ratio_standard = count_standard / total_sensors
             
-            # DEBUG : Les stats sont cachées par défaut (level=INFO)
             logger.debug(f"📊 {zone_name}: {count_sec}/{total_sensors} 'Sec' ({ratio_sec*100:.0f}%)")
             logger.debug(f"📊 {zone_name}: {count_standard}/{total_sensors} 'Standard' ({ratio_standard*100:.0f}%)")
             

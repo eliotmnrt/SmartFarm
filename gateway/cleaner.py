@@ -3,6 +3,7 @@ import numpy as np
 import requests
 import time
 import math
+import keyboard
 from collections import deque, defaultdict
 from dotenv import load_dotenv
 import os
@@ -21,6 +22,19 @@ FIWARE_HEADERS = {
     'fiware-servicepath': '/',
     'Content-Type': 'application/json'
 }
+
+
+is_paused = False
+
+def toggle_pause(e):
+    """Fonction appelée quand on appuie sur Espace"""
+    global is_paused
+    is_paused = not is_paused
+    if is_paused:
+        print("\n⏸️  PAUSE ACTIVÉE... (Appuyez sur ESPACE pour reprendre)")
+    else:
+        print("\n▶️  REPRISE DU TRAITEMENT...")
+
 
 SEND_TO_ORION = True  
 
@@ -55,7 +69,7 @@ def calculate_gps_coords(x_meters, y_meters):
 
 # Seuils Physiques (Pour détecter les outliers x5 ou x-1)
 THRESHOLDS = {
-    'temperature': (-15, 60),       # °C
+    'temperature': (-15, 70),       # °C
     'soilTemperature': (-10, 50),   # °C
     'humidity': (0, 100),           # %
     'soilMoisture': (0, 100),       # %
@@ -85,7 +99,7 @@ class SensorGateway:
         x, y = sensors_positions.get(device_id, (0, 0))
         lat, lon = calculate_gps_coords(x, y)
         print(f"   📍 Position GPS calculée : lat={lat}, lon={lon}")
-        # Payload de configuration du Device (Mapping)
+        
         provisioning_payload = {
             "devices": [
                 {
@@ -117,8 +131,6 @@ class SensorGateway:
 
         try:
             response = requests.post(IOTA_ADMIN_URL, json=provisioning_payload, headers=FIWARE_HEADERS)
-            
-            # 201 = Créé, 409 = Existe déjà (C'est bon aussi)
             if response.status_code in [201, 200, 409]:
                 print(f"✅ Device {device_id} enregistré (Code {response.status_code})")
                 self.known_devices.add(device_id)
@@ -134,24 +146,19 @@ class SensorGateway:
         # 1. Gestion des NaN (Donnée manquante)
         if pd.isna(value):
             if len(self.memory[device_id][metric]) > 0:
-                # On remplace par la moyenne des dernières valeurs connues (Imputation)
                 corrected = np.mean(self.memory[device_id][metric])
                 return corrected, "FIXED_NAN"
             else:
-                # Pas d'historique ? On retourne la moyenne du range théorique (Mieux que rien)
                 t_min, t_max = THRESHOLDS.get(metric, (0, 0))
                 return (t_min + t_max) / 2, "DEFAULT"
 
         # 2. Gestion des Outliers (Valeurs aberrantes physiquement)
         t_min, t_max = THRESHOLDS.get(metric, (-999, 999))
         if value < t_min or value > t_max:
-            # C'est un outlier (ex: x5 ou négatif impossible)
             if len(self.memory[device_id][metric]) > 0:
-                # On remplace par la moyenne mobile (lissage)
                 corrected = np.mean(self.memory[device_id][metric])
                 return corrected, "FIXED_OUTLIER"
             else:
-                # Si c'est la première valeur et qu'elle est fausse, on clipe
                 corrected = max(t_min, min(value, t_max))
                 return corrected, "CLIPPED"
         
@@ -180,18 +187,14 @@ class SensorGateway:
                 return value, "FIXED_FREEZE"
                 # TODO: envoyer alerte orion
 
-        # 5. Lissage du Bruit (Noise Reduction)
-        # Même si la valeur est bonne, on l'ajoute à l'historique et on lisse légèrement
-        # Moyenne pondérée : 70% nouvelle valeur, 30% moyenne historique
+        # 5. Lissage du Bruit
         if len(self.memory[device_id][metric]) > 0:
             avg_history = np.mean(self.memory[device_id][metric])
             smoothed_value = (0.7 * value) + (0.3 * avg_history)
         else:
             smoothed_value = value
 
-        # Mise à jour de la mémoire avec la valeur LISSÉE
         self.memory[device_id][metric].append(smoothed_value)
-        
         return smoothed_value, "OK"
 
 # --- MAIN LOOP (SIMULATION DU TEMPS) ---
@@ -199,47 +202,43 @@ def run_simulation():
     try:
         df_dirty = pd.read_csv(INPUT_DIRTY_FILE)
         df_dirty['timestamp'] = pd.to_datetime(df_dirty['timestamp'])
-        
-        # On trie par temps pour simuler l'arrivée des paquets
         df_dirty = df_dirty.sort_values(by=['timestamp', 'cluster_id'])
         
         gateway = SensorGateway()
         
-        print(f"🚀 Démarrage de la Gateway de Nettoyage ({len(df_dirty)} mesures)...")
-        
-        # On groupe par timestamp (comme si on recevait un batch toutes les 30 min)
+        print(f" Démarrage de la Gateway de Nettoyage ({len(df_dirty)} mesures)...")
+        print(" ASTUCE : Appuyez sur la touche ESPACE pour mettre en pause/reprendre.")
+
+        # --- ACTIVATION DE L'ECOUTE DU CLAVIER ---
+        keyboard.on_press_key("space", toggle_pause)
+
         for timestamp, group in df_dirty.groupby('timestamp'):
+            
+            # --- BOUCLE DE PAUSE ---
+            while is_paused:
+                time.sleep(0.1) # Petite pause pour ne pas surcharger le CPU
+
             iso_date = timestamp.isoformat()
-            print(f"\n⏱️  Réception paquet : {iso_date}")
+            print(f"\n  Réception paquet : {iso_date}")
             
             for _, row in group.iterrows():
                 device_id = row['cluster_id']
                 payload_clean = {"date": iso_date}
-                
-                # Liste des colonnes capteurs à traiter
                 sensor_cols = [c for c in THRESHOLDS.keys() if c in df_dirty.columns]
                 
                 debug_msg = []
                 
                 for metric in sensor_cols:
                     raw_val = row[metric]
-                    
-                    # --- LE CŒUR DU TRAITEMENT ---
                     clean_val, status = gateway.clean_value(device_id, metric, raw_val)
-                    # -----------------------------
-                    
                     payload_clean[metric] = round(clean_val, 2)
                     
-                    # Juste pour l'affichage console si correction importante
                     if status != "OK" and status != "DEFAULT":
                         debug_msg.append(f"{metric}: {raw_val} -> {clean_val:.2f} ({status})")
 
-                # Affichage des corrections pour ce device
                 if debug_msg:
                     print(f"   🔧 {device_id} corrections : {', '.join(debug_msg)}")
 
-                # Mapping des noms pour IoT Agent (si besoin de raccourcir)
-                # Ici on garde les noms complets ou on mappe vers les codes courts ta, ts, etc.
                 final_payload = {
                     "date": iso_date,
                     "ta": payload_clean.get('temperature'),
@@ -255,22 +254,22 @@ def run_simulation():
                 # ENVOI VERS ORION
                 if SEND_TO_ORION:
                     try:
-                        # Si on n'arrive pas à créer le device, on n'envoie pas la donnée
                         if not gateway.ensure_device_exists(device_id):
                             continue
-
                         url = f"{IOTA_HTTP_URL}?k={API_KEY}&i={device_id}"
                         requests.post(url, json=final_payload, timeout=1)
                     except Exception as e:
                         print(f"⚠️ Erreur lors de l'envoi à Orion pour le device {device_id}: {e}")
             
-            # Petite pause pour voir défiler (optionnel)
-            time.sleep(1)
+            time.sleep(0.1)
 
         print("\n✅ Simulation terminée. Données nettoyées et envoyées.")
 
     except FileNotFoundError:
         print(f"❌ Erreur: Fichier {INPUT_DIRTY_FILE} introuvable.")
+    finally:
+        # Nettoyage : on arrête d'écouter le clavier à la fin
+        keyboard.unhook_all()
 
 if __name__ == "__main__":
     run_simulation()

@@ -5,7 +5,6 @@ import random
 INPUT_FILE = '../docker/serviceIA/donnees_spatiales_cluster.csv'
 OUTPUT_FILE = 'sensor_data_raw_dirty.csv'
 
-# Probabilités (0.05 = 5% de chance)
 PROB_OUTLIER = 0.02   # Valeur extrême
 PROB_MISSING = 0.03   # Valeur manquante (NaN)
 PROB_FREEZE = 0.05    # Capteur bloqué (répète la valeur précédente)
@@ -19,15 +18,11 @@ def introduce_chaos(df):
     if 'y' in df_dirty.columns:
         df_dirty = df_dirty.drop(columns=['y'])
     
-    
-    # Colonnes numériques à perturber
     sensor_cols = [
         'temperature', 'soilTemperature', 'humidity', 'soilMoisture', 
         'azote_mg_kg', 'phosphore_mg_kg', 'potassium_mg_kg', 'ph'
     ]
     
-    # Adapter les noms de colonnes si votre CSV utilise les anciens noms
-    # Mapping rapide au cas où
     actual_cols = [c for c in sensor_cols if c in df.columns]
     
     print("--- 1. Ajout de Bruit de fond (Léger) ---")
