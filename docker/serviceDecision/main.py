@@ -63,13 +63,15 @@ def send_alert(zone_name, action, clusters):
         url = f"{ORION_URL}/{entity_id}/attrs"
         
         payload = {
-            "irrigationRecommendation": {
+            "irrigationrecommendation": {
                 "value": action,
-                "type": "Text"
-            },
-            "lastDecisionDate": {
-                "value": timestamp,
-                "type": "DateTime"
+                "type": "String",
+                "metadata": {
+                    "timestamp": {
+                        "value": timestamp,
+                        "type": "DateTime"
+                    }
+                }
             }
         }
         try:
@@ -88,7 +90,7 @@ def send_alert(zone_name, action, clusters):
 def run_decision_cycle():
     devices = get_realtime_states()
     
-    if not devices:
+    if not devices or len(devices) == 0:
         return
 
     device_map = {}

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: decision-service
-        image: smartfarm/decision-service:latest # Pensez à builder l'image !
+        image: smartfarm/decision-service:local # Pensez à builder l'image !
         imagePullPolicy: IfNotPresent # Ou Never si image locale
         env:
         - name: ORION_HOST

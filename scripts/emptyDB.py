@@ -13,11 +13,9 @@ FIWARE_HEADERS = {
 def clear_history_cratedb():
     print("🗑️  Nettoyage de l'historique CrateDB...")
     
-    # Liste des tables probables (basé sur tes types d'entités)
-    # QuantumLeap crée des tables au format "schema"."etType"
+
     tables_to_drop = [
-        '"mtopeniot"."etdevice"',   # Table des devices/capteurs
-        '"mtopeniot"."etcluster"',  # Table des clusters
+        '"mtopeniot"."etcluster"',
     ]
 
     for table in tables_to_drop:

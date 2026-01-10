@@ -130,10 +130,6 @@ async def receive_notification(request: Request):
                             "value": pd.Timestamp.now().isoformat()
                         }
                     }
-                },
-                "clusterId": {
-                    "value": entity_id,
-                    "type": "String"
                 }
             }
 

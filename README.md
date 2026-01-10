@@ -72,10 +72,11 @@ chmod +x scripts/*.sh
 
 Ce script va :
 
-1.  Créer le namespace `fiware-platform` avec l'injection Istio activée.
-2.  Déployer les bases de données (MongoDB, CrateDB, InfluxDB).
-3.  Déployer les composants FIWARE (Orion, IoT Agent, QuantumLeap).
-4.  Déployer Grafana avec les sources de données pré-configurées.
+1.  Builder les images Docker des services IA et Décision.
+2.  Créer le namespace `fiware-platform` avec l'injection Istio activée.
+3.  Déployer les bases de données (MongoDB, CrateDB, InfluxDB).
+4.  Déployer les composants FIWARE (Orion, IoT Agent, QuantumLeap).
+5.  Déployer Grafana avec les sources de données pré-configurées.
 
 ### 3\. Vérification des Pods
 
@@ -146,6 +147,16 @@ Accédez à Grafana pour voir les données en temps réel et l'historique.
   * **Login** : `admin`
   * **Mot de passe** : `admin`
   * **Dashboard** : Allez dans *Dashboards* \> *data*. Le dashboard est pré-chargé via le provisioning Kubernetes.
+
+### 4\. Observabilité (Kiali)
+
+Accedez à Kiali pour visualiser le maillage Istio et les métriques.
+
+```bash
+  istioctl dashboard kiali &
+```
+  * **URL** : [http://localhost:20001/kiali](http://localhost:20001/kiali) (Assurez-vous que le port-forward est actif via `./scripts/portManager.sh status` ou manuellement). Et selectionnez le namespace `fiware-platform` si nécessaire.
+
 
 -----
 
