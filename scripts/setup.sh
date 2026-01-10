@@ -47,7 +47,7 @@ curl -s -X POST "http://localhost:4041/iot/services" \
    {
      "apikey": "'$API_KEY'",
      "cbroker": "http://orion:1026",
-     "entity_type": "Thing",
+     "entity_type": "Cluster",
      "resource": "/iot/json"
    }
  ]
@@ -121,5 +121,8 @@ curl -X POST "http://localhost:1026/v2/subscriptions" \
   },
   "throttling": 0
 }'
+
+
+istioctl dashboard kiali &
 
 echo -e "${GREEN}✅ Setup terminé !${NC}"

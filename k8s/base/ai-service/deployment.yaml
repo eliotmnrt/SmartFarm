@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: ai-service
-        image: ai-service:local  # Ou build local
+        image: smartfarm/ai-service:local
         ports:
         - containerPort: 8000

@@ -120,7 +120,9 @@ class SensorGateway:
                         {"object_id": "p",  "name": "p", "type": "Number"},
                         {"object_id": "k",  "name": "k", "type": "Number"},
                         {"object_id": "ph", "name": "ph", "type": "Number"},
-                        {"object_id": "state", "name": "state", "type": "String"}
+                        {"object_id": "state", "name": "state", "type": "String"},
+                        {"object_id": "recomm", "name": "irrigationrecommendation", "type": "String"},
+                        {"object_id": "fs", "name": "fieldState", "type": "Integer"},
                     ],
                     "static_attributes": [
                         {"name": "longitude", "type": "Number", "value": lon}, 
@@ -154,18 +156,14 @@ class SensorGateway:
         # 1. Gestion des NaN
         if pd.isna(value):
             if len(self.memory[device_id][metric]) > 0:
-                last_val = self.memory[device_id][metric][-1]
-                if pd.isna(last_val):
-                    self.defects_counters[device_id][metric] += 1
-                    print(f"   ⚠️ Capteur {device_id} metric {metric} NaN répété ({self.defects_counters[device_id][metric]}).")
-                else:
-                    self.defects_counters[device_id][metric] = 0
+                self.defects_counters[device_id][metric] += 1
+                count = self.defects_counters[device_id][metric]
+                
+                print(f"   ⚠️ Capteur {device_id} metric {metric} est NaN ({count}/5)")
 
-                self.memory[device_id][metric].append(value)
-
-                if self.defects_counters[device_id][metric] > 5:
-                    value = -0.001
-                    print(f"   ❄️ Capteur {device_id} metric {metric} cassé (NaN répétés). Forçage valeur à {value}.")
+                if count > 5:
+                    fixed_value = -0.001
+                    print(f"   ❄️ Capteur {device_id} metric {metric} CASSÉ. Forçage à {fixed_value}.")
                     
                     # Update state in Orion for maintenance
                     payload = {
@@ -173,11 +171,18 @@ class SensorGateway:
                     }
                     send_to_orion(device_id, payload)
                     
-                    return value, "FIXED_BROKEN"
-                return value, "NAN"
+                    return fixed_value, "FIXED_BROKEN"
+                
+                else:
+                    corrected = np.mean(self.memory[device_id][metric])
+                    return corrected, "FIXED_NAN"
+
             else:
                 t_min, t_max = THRESHOLDS.get(metric, (0, 0))
-                return (t_min + t_max) / 2, "DEFAULT"
+                default_val = (t_min + t_max) / 2
+                return default_val, "DEFAULT"
+        
+        self.defects_counters[device_id][metric] = 0
 
         # 2. Gestion des Outliers
         t_min, t_max = THRESHOLDS.get(metric, (-999, 999))
@@ -295,16 +300,13 @@ def run_simulation():
                     "ph": payload_clean.get('ph'),
                 }
 
-                # Préparation du payload final sans les nan
-                final_payload = {k: v for k, v in payload.items() if not pd.isna(v)}
-
                 # ENVOI VERS ORION
                 if SEND_TO_ORION:
                     if not gateway.ensure_device_exists(device_id):
                         continue
-                    send_to_orion(device_id, final_payload)
+                    send_to_orion(device_id, payload)
             
-            time.sleep(0.1)
+            time.sleep(1.5)
 
         print("\n✅ Simulation terminée. Données nettoyées et envoyées.")
 

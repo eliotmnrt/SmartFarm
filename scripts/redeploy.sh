@@ -8,7 +8,13 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${GREEN}��� Redéploiement complet de la plateforme FIWARE...${NC}"
+echo -e "${GREEN} Building docker images ${NC}"
+echo ""
+# Construire les images Docker
+docker build -t smartfarm/decision-service:local ./docker/serviceDecision/
+docker build -t smartfarm/ai-service:local ./docker/serviceIA/
+
+echo -e "${GREEN} Redéploiement complet de la plateforme FIWARE...${NC}"
 echo ""
 
 # Fonction pour attendre les pods
@@ -80,7 +86,6 @@ kubectl apply -f ~/istio/istio-1.28.0/samples/addons/grafana.yaml
 
 # Installer Kiali
 kubectl apply -f ~/istio/istio-1.28.0/samples/addons/kiali.yaml
-wait_for_pods "kiali"
 
 echo ""
 echo -e "${GREEN}✅ Redéploiement terminé !${NC}"
