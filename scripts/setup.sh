@@ -122,6 +122,36 @@ curl -X POST "http://localhost:1026/v2/subscriptions" \
   "throttling": 0
 }'
 
+echo -e "${BLUE}[4/4] Création de la souscription Orion -> Service Notif...${NC}"
+curl -X POST 'http://localhost:1026/v2/subscriptions' \
+  -H 'Content-Type: application/json' \
+  -H 'fiware-service: openiot' \
+  -H 'fiware-servicepath: /' \
+  -d '{
+  "description": "Notification Service for Irrigation",
+  "subject": {
+    "entities": [
+      {
+        "idPattern": ".*",
+        "type": "Cluster"
+      }
+    ],
+    "condition": {
+      "attrs": [
+        "irrigationrecommendation", "state"
+      ]
+    }
+  },
+  "notification": {
+    "http": {
+      "url": "http://notification-service:8000/v2/notify"
+    },
+    "attrs": [
+      "irrigationrecommendation", "state"
+    ]
+  },
+  "throttling": 0
+}'
 
 istioctl dashboard kiali &
 

@@ -21,7 +21,7 @@ Le système repose sur une architecture micro-services avancée :
 
 ### 3. Couche Intelligence & Décision (Smart Logic)
 * **🤖 AI Service** : Service Python qui analyse l'historique (CrateDB) pour déterminer l'état de santé des champs (Sec, Humide, Standard) via des algorithmes de classification.
-* **🧠 Decision Service** : Boucle de contrôle temps-réel qui interroge Orion, analyse la proportion d'états par zone et envoie des ordres d'irrigation (`irrigationRecommendation`) aux clusters.
+* **🧠 Decision Service** : Boucle de contrôle temps-réel qui interroge Orion, analyse la proportion d'états par zone et envoie des ordres d'irrigation (`irrigationrecommendation`) aux clusters.
 
 ### 4. Couche Visualisation
 * **Grafana** : Tableaux de bord hybrides.
@@ -48,6 +48,8 @@ Le système repose sur une architecture micro-services avancée :
   export PATH=$PATH:~/istio/istio-1.28.0/bin
   ```
 * **Python 3.9+** (pour la gateway de simulation).
+* **Docker** (pour builder les images des services IA et Décision).
+* **.env** : Contactez moi pour obtenir le fichier `.env`
 
 ---
 
@@ -136,7 +138,7 @@ Le système tourne en autonomie grâce à deux boucles de rétroaction :
 
 **Decision Service (Action)** :
 - Scanne l'état des zones directement dans orion toutes les 10 secondes.
-- Si un seuil de sécheresse defini (default : >20%) est dépassé, envoie l'ordre START_IRRIGATION via l'attribut irrigationRecommendation
+- Si un seuil de sécheresse defini (default : >20%) est dépassé, envoie l'ordre START_IRRIGATION via l'attribut irrigationrecommendation
 
 
 ### 3\. Visualisation (Grafana)

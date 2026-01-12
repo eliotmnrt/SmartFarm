@@ -1,3 +1,4 @@
+from typing import Dict
 import pandas as pd
 import numpy as np
 import requests
@@ -16,6 +17,7 @@ API_KEY = os.getenv("API_KEY")
 INPUT_DIRTY_FILE = 'sensor_data_raw_dirty.csv'
 IOTA_HTTP_URL = "http://localhost:7896/iot/json"      # Pour envoyer les données
 IOTA_ADMIN_URL = "http://localhost:4041/iot/devices"  # Pour créer les devices
+ORION_URL = "http://localhost:1026/v2/entities"  # Pour vérifier l'existence des devices
 
 FIWARE_HEADERS = {
     'fiware-service': 'openiot',
@@ -25,6 +27,7 @@ FIWARE_HEADERS = {
 
 
 is_paused = False
+initial_device_sent: Dict[str, bool] = {}
 
 def toggle_pause(e):
     """Fonction appelée quand on appuie sur Espace"""
@@ -137,19 +140,13 @@ class SensorGateway:
             if response.status_code in [201, 200, 409]:
                 print(f"✅ Device {device_id} enregistré (Code {response.status_code})")
                 self.known_devices.add(device_id)
+                return True
             else:
                 print(f"❌ Échec provisioning {device_id}: {response.text}")
                 return False
         except Exception as e:
             print(f"❌ Erreur connexion Admin API: {e}")
             return False
-        
-        # Initialisation de l'état du device
-        payload = {
-            "state": "ACTIVE"
-        }
-        send_to_orion(device_id, payload)
-        return True
 
 
     def clean_value(self, device_id, metric, value):
@@ -167,7 +164,16 @@ class SensorGateway:
                     
                     # Update state in Orion for maintenance
                     payload = {
-                        "state": "ERROR_BROKEN"
+                        "state": {
+                            "value": "ERROR_BROKEN",
+                            "type": "String",
+                            "metadata": {
+                                "timestamp": {
+                                    "value": pd.Timestamp.now().isoformat(),
+                                    "type": "DateTime"
+                                }
+                            }
+                        }
                     }
                     send_to_orion(device_id, payload)
                     
@@ -220,7 +226,16 @@ class SensorGateway:
                 
                 # Update state in Orion for maintenance
                 payload = {
-                    "state": "ERROR_FREEZE"
+                    "state": {
+                        "value": "ERROR_FROZEN",
+                        "type": "String",
+                        "metadata": {
+                            "timestamp": {
+                                "value": pd.Timestamp.now().isoformat(),
+                                "type": "DateTime"
+                            }
+                        }
+                    }
                 }
                 send_to_orion(device_id, payload)
                 
@@ -237,17 +252,30 @@ class SensorGateway:
         return smoothed_value, "OK"
 
 
-def send_to_orion(device_id, payload):
+def send_to_iota(device_id, payload):
     if SEND_TO_ORION:
         try:
             url = f"{IOTA_HTTP_URL}?k={API_KEY}&i={device_id}"
             requests.post(url, json=payload, timeout=1)
+        except Exception as e:
+            print(f"⚠️ Erreur lors de l'envoi à l'iota pour le device {device_id}: {e}")
+
+def send_to_orion(device_id, payload):
+    if SEND_TO_ORION:
+        try:
+            print(f"   🚀 Envoi à Orion pour {device_id}: {payload}")
+            url = f"{ORION_URL}/urn:ngsi-ld:Cluster:{device_id}/attrs"
+            print(f"   🚀 URL Orion: {url}")
+            res = requests.post(url, json=payload, headers=FIWARE_HEADERS, timeout=1)
+            if res.status_code >= 400:
+                print(f"⚠️ Erreur update Orion {device_id} (HTTP {res.status_code}): {res.text}")
         except Exception as e:
             print(f"⚠️ Erreur lors de l'envoi à Orion pour le device {device_id}: {e}")
 
 
 # --- MAIN LOOP (SIMULATION DU TEMPS) ---
 def run_simulation():
+    global initial_device_sent
     try:
         df_dirty = pd.read_csv(INPUT_DIRTY_FILE)
         df_dirty['timestamp'] = pd.to_datetime(df_dirty['timestamp'])
@@ -304,7 +332,13 @@ def run_simulation():
                 if SEND_TO_ORION:
                     if not gateway.ensure_device_exists(device_id):
                         continue
-                    send_to_orion(device_id, payload)
+                    if device_id not in initial_device_sent:
+                        print("Uniquement les premières données de chaque device sont envoyées pour éviter que CrateDB fasse n'importe quoi...")
+                        initial_device_sent[device_id] = True
+                        payload["state"] = "ACTIVE"
+                        payload["fieldState"] = 0
+                        payload["irrigationrecommendation"] = "NO_IRRIGATION"
+                    send_to_iota(device_id, payload)
             
             time.sleep(1.5)
 

@@ -13,6 +13,7 @@ echo ""
 # Construire les images Docker
 docker build -t smartfarm/decision-service:local ./docker/serviceDecision/
 docker build -t smartfarm/ai-service:local ./docker/serviceIA/
+docker build -t smartfarm/notification-service:local ./docker/serviceNotif/
 
 echo -e "${GREEN} Redéploiement complet de la plateforme FIWARE...${NC}"
 echo ""
@@ -74,6 +75,39 @@ wait_for_pods "ai-service"
 echo -e "${BLUE}[9/9]${NC} Déploiement de la Decision-Service..."
 kubectl apply -f k8s/base/decision-service/
 wait_for_pods "decision-service"
+
+
+if [ -f .env ]; then
+    # "export" automatiquement les variables lues
+    set -a
+    source .env
+    set +a
+else
+    echo "⚠️  Erreur : Fichier .env introuvable !"
+    exit 1
+fi
+
+# 2. Vérifier que la variable existe bien
+if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+    echo "⚠️  Erreur : La variable DISCORD_WEBHOOK_URL est vide ou absente du .env"
+    exit 1
+fi
+
+echo "🚀 Création/Mise à jour du secret Discord..."
+
+kubectl create secret generic discord-secret \
+  --namespace=fiware-platform \
+  --from-literal=webhook_url_discord="$DISCORD_WEBHOOK_URL" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+echo "✅ Secret 'discord-secret' configuré."
+
+sleep 2 
+
+#10. Notification-service
+echo -e "${BLUE}[10/9]${NC} Déploiement de la Notification-Service..."
+kubectl apply -f k8s/base/notification-service/
+wait_for_pods "notification-service"
 
 
 
