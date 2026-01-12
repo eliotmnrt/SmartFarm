@@ -1,0 +1,308 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weather-agent-scripts
+  namespace: fiware-platform
+  labels:
+    app: weather-agent
+data:
+  weather_providers.py: |
+    #! /usr/bin/env python3
+    """
+    Weather provider interface with fallback mechanism
+    Supports multiple APIs with automatic failover
+    """
+    import os
+    import json
+    import logging
+    import requests
+    import subprocess
+    from typing import Dict, List, Optional
+
+    log = logging.getLogger('weather-provider')
+
+    class WeatherProvider:
+        """Base class for weather data providers"""
+        
+        def get_weather(self, lat: float, lon: float) -> Dict:
+            """Get weather data for coordinates. Returns dict with keys: temp, humidity, wind_speed, forecast"""
+            raise NotImplementedError
+
+    class OpenMeteoProvider(WeatherProvider):
+        """Open-Meteo API provider (free, no API key needed)"""
+        
+        def __init__(self, name: str = "Open-Meteo"):
+            self.name = name
+        
+        def get_weather(self, lat: float, lon: float) -> Dict:
+            try:
+                params = {
+                    'latitude': lat,
+                    'longitude': lon,
+                    'current': 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,pressure_msl',
+                    'daily': 'weather_code,temperature_2m_max,temperature_2m_min',
+                    'timezone': 'UTC'
+                }
+                r = requests.get('https://api.open-meteo.com/v1/forecast', 
+                               params=params, timeout=15)
+                r.raise_for_status()
+                data = r.json()
+                
+                current = data.get('current', {})
+                daily = data.get('daily', {})
+                
+                return {
+                    'temp': current.get('temperature_2m'),
+                    'humidity': current.get('relative_humidity_2m'),
+                    'wind_speed': current.get('wind_speed_10m'),
+                    'pressure': current.get('pressure_msl'),
+                    'description': f"Code {current.get('weather_code')}",
+                    'forecast': daily,
+                    'raw': data,
+                    'provider': self.name
+                }
+            except Exception as e:
+                log.warning(f'{self.name}: {str(e)}')
+                raise
+
+    class ScriptProvider(WeatherProvider):
+        """Script provider - calls a local script/command"""
+        
+        def __init__(self, script_path: str, name: str = "LocalScript"):
+            self.script_path = script_path
+            self.name = name
+            if not script_path or not os.path.exists(script_path):
+                raise ValueError(f"{name}: Script not found: {script_path}")
+        
+        def get_weather(self, lat: float, lon: float) -> Dict:
+            try:
+                result = subprocess.run(
+                    [self.script_path, str(lat), str(lon)],
+                    capture_output=True,
+                    text=True,
+                    timeout=15
+                )
+                if result.returncode != 0:
+                    raise Exception(f"Script error: {result.stderr}")
+                
+                data = json.loads(result.stdout)
+                return {
+                    'temp': data.get('temp'),
+                    'humidity': data.get('humidity'),
+                    'wind_speed': data.get('wind_speed'),
+                    'pressure': data.get('pressure'),
+                    'description': data.get('description', 'N/A'),
+                    'forecast': data.get('forecast', []),
+                    'raw': data,
+                    'provider': self.name
+                }
+            except Exception as e:
+                log.warning(f'{self.name}: {str(e)}')
+                raise
+
+    class WeatherProviderChain:
+        """Chain of providers with automatic fallback"""
+        
+        def __init__(self, providers: List[WeatherProvider]):
+            self.providers = providers
+            self.last_working_index = 0
+        
+        def get_weather(self, lat: float, lon: float) -> Dict:
+            """Try providers in order, fall back if one fails"""
+            errors = []
+            
+            # Try providers in order, starting from the last working one
+            for i, provider in enumerate(self.providers):
+                try:
+                    log.info(f'Trying {provider.name}...')
+                    result = provider.get_weather(lat, lon)
+                    self.last_working_index = i
+                    log.info(f'{provider.name} succeeded')
+                    return result
+                except Exception as e:
+                    error_msg = f'{provider.name} failed: {str(e)}'
+                    errors.append(error_msg)
+                    log.warning(error_msg)
+            
+            # All providers failed
+            raise Exception(f'All providers failed: {"; ".join(errors)}')
+
+    def get_provider_chain() -> WeatherProviderChain:
+        """Factory function to create a chain of configured weather providers"""
+        providers = []
+        
+        # Parse WEATHER_APIS_CONFIG if provided
+        apis_config = os.environ.get('WEATHER_APIS_CONFIG', '')
+        if apis_config:
+            try:
+                apis_list = json.loads(apis_config)
+                for api in apis_list:
+                    api_type = api.get('type', '').lower()
+                    name = api.get('name', api_type)
+                    
+                    try:
+                        if api_type == 'openmeteo':
+                            providers.append(OpenMeteoProvider(name))
+                        
+                        elif api_type == 'script':
+                            path = api.get('path') or os.environ.get('WEATHER_SCRIPT_PATH')
+                            if path:
+                                providers.append(ScriptProvider(path, name))
+                    except Exception as e:
+                        log.warning(f'Skipping provider {name}: {e}')
+                        continue
+            except Exception as e:
+                log.warning(f'Failed to parse WEATHER_APIS_CONFIG: {e}')
+        
+        # Fallback: single provider from environment variables
+        if not providers:
+            provider_type = os.environ.get('WEATHER_PROVIDER', 'openmeteo').lower()
+            
+            try:
+                if provider_type == 'openmeteo':
+                    providers.append(OpenMeteoProvider())
+                
+                elif provider_type == 'script':
+                    script_path = os.environ.get('WEATHER_SCRIPT_PATH')
+                    if script_path:
+                        providers.append(ScriptProvider(script_path))
+            except Exception as e:
+                log.warning(f'Failed to create fallback provider: {e}')
+        
+        if not providers:
+            raise ValueError('No weather providers configured')
+        
+        return WeatherProviderChain(providers)
+
+  weather_agent.py: |
+    #! /usr/bin/env python3
+    import os
+    import json
+    import logging
+    import requests
+    from flask import Flask, request, jsonify
+    from weather_providers import get_provider_chain
+
+    logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
+    log = logging.getLogger('weather-agent')
+
+    ORION_URL = os.environ.get('ORION_URL', 'http://orion:1026/v2/entities')
+    
+    app = Flask(__name__)
+    provider_chain = None
+
+    @app.route('/health')
+    def health():
+        return jsonify({'status': 'ok'})
+
+    @app.route('/weather', methods=['POST'])
+    def weather():
+        global provider_chain
+        
+        try:
+            if provider_chain is None:
+                provider_chain = get_provider_chain()
+        except Exception as e:
+            log.error(f'Failed to initialize weather providers: {e}')
+            return jsonify({'error': f'Provider initialization failed: {str(e)}'}), 500
+
+        try:
+            payload = request.get_json(force=True)
+            lat = payload.get('lat')
+            lon = payload.get('lon')
+            entity_id = payload.get('entity_id', 'Weather:1')
+
+            if lat is None or lon is None:
+                return jsonify({'error': 'lat and lon required'}), 400
+
+            # Get weather data from configured provider chain with fallback
+            weather_data = provider_chain.get_weather(lat, lon)
+            provider_used = weather_data.get('provider', 'Unknown')
+
+            # Build NGSI entity for Orion
+            orion_payload = {
+                'id': entity_id,
+                'type': 'WeatherObserved',
+                'temperature': {'value': weather_data.get('temp')},
+                'humidity': {'value': weather_data.get('humidity')},
+                'wind_speed': {'value': weather_data.get('wind_speed')},
+                'pressure': {'value': weather_data.get('pressure')},
+                'description': {'value': weather_data.get('description')},
+                'forecast': {'value': weather_data.get('forecast', [])},
+                'data_provider': {'value': provider_used}
+            }
+
+            headers = {
+                'Content-Type': 'application/json',
+                'fiware-service': 'openiot',
+                'fiware-servicepath': '/'
+            }
+            r = requests.post(ORION_URL + '?options=upsert', 
+                            headers=headers, 
+                            data=json.dumps(orion_payload), 
+                            timeout=10)
+            r.raise_for_status()
+
+            return jsonify({
+                'orion_status': r.status_code, 
+                'provider': provider_used,
+                'weather': {
+                    'temp': weather_data.get('temp'),
+                    'humidity': weather_data.get('humidity'),
+                    'wind_speed': weather_data.get('wind_speed'),
+                    'pressure': weather_data.get('pressure'),
+                    'description': weather_data.get('description')
+                }
+            }), 200
+
+        except Exception as e:
+            log.exception('Error processing weather request')
+            return jsonify({'error': str(e)}), 502
+
+    if __name__ == '__main__':
+        port = int(os.environ.get('PORT', '8888'))
+        app.run(host='0.0.0.0', port=port)
+
+  weather-data.sh: |
+    #!/bin/bash
+    # Local weather data provider script
+    # Usage: ./weather-data.sh <latitude> <longitude>
+    # Returns: JSON with weather data
+    
+    LAT=$1
+    LON=$2
+    
+    if [ -z "$LAT" ] || [ -z "$LON" ]; then
+      echo '{"error": "Usage: weather-data.sh <lat> <lon>"}'
+      exit 1
+    fi
+    
+    # Générer des données météo réalistes simulées
+    TEMP=$(awk -v min=5 -v max=30 'BEGIN{srand(); printf "%.1f", min+rand()*(max-min)}')
+    HUM=$(awk -v min=30 -v max=95 'BEGIN{srand(); printf "%.0f", min+rand()*(max-min)}')
+    WIND=$(awk -v min=0 -v max=15 'BEGIN{srand(); printf "%.1f", min+rand()*(max-min)}')
+    PRESSURE=$(awk -v min=980 -v max=1040 'BEGIN{srand(); printf "%.0f", min+rand()*(max-min)}')
+    CLOUDS=$(awk -v min=0 -v max=100 'BEGIN{srand(); printf "%.0f", min+rand()*(max-min)}')
+    
+    # Descriptions météo aléatoires
+    DESCRIPTIONS=("Ensoleillé" "Partiellement nuageux" "Nuageux" "Couvert" "Légère pluie" "Pluie" "Orageux")
+    DESC_INDEX=$(awk -v min=0 -v max=6 'BEGIN{srand(); printf "%.0f", min+rand()*(max-min)}')
+    DESC="${DESCRIPTIONS[$DESC_INDEX]}"
+    
+    # Retourner les données au format JSON
+    cat <<EOF
+    {
+      "temp": $TEMP,
+      "humidity": $HUM,
+      "wind_speed": $WIND,
+      "pressure": $PRESSURE,
+      "clouds": $CLOUDS,
+      "description": "$DESC",
+      "location": {
+        "latitude": $LAT,
+        "longitude": $LON
+      },
+      "forecast": []
+    }
+    EOF
+

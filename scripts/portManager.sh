@@ -31,6 +31,7 @@ start_port_forwards() {
     POD_QL=$(kubectl get pod -n $NAMESPACE -l app=quantumleap -o jsonpath="{.items[0].metadata.name}" 2>/dev/null)
     POD_GRAFANA=$(kubectl get pod -n $NAMESPACE -l app=grafana -o jsonpath="{.items[0].metadata.name}" 2>/dev/null)
     POD_CRATE=$(kubectl get pod -n $NAMESPACE -l app=cratedb -o jsonpath="{.items[0].metadata.name}" 2>/dev/null)
+    POD_WEATHER=$(kubectl get pod -n $NAMESPACE -l app=weather-agent -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
 
     if [ -z "$POD_ORION" ] || [ -z "$POD_IOTA" ]; then
         echo -e "${RED}ERREUR:${NC} Impossible de trouver les pods Orion ou IoT Agent dans le namespace $NAMESPACE."
@@ -69,6 +70,12 @@ start_port_forwards() {
     ALL_PIDS+=($!)
     echo "  - CrateDB: 4200 (PID: $!)"
 
+    # Weather agent
+    if [ -n "$POD_WEATHER" ]; then
+        kubectl port-forward -n $NAMESPACE $POD_WEATHER 8888:8888 > /dev/null 2>&1 &
+        ALL_PIDS+=($!)
+        echo "   - Weather Agent: 8888 (PID: $!)"})"
+    fi
     # Stocker tous les PIDs dans un fichier temporaire
     echo "${ALL_PIDS[@]}" > "$PID_FILE"
     
