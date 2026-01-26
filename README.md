@@ -36,8 +36,11 @@ Le système repose sur une architecture micro-services avancée :
 
 ## 📋 Prérequis
 
-* **Kubernetes Cluster** : Docker Desktop (cluster Kubernetes activé) ou Minikube ou K3s.
-* **Kubectl** configuré.
+* **Kubernetes Cluster** : via [Docker Desktop](https://docs.docker.com/desktop/use-desktop/kubernetes/) (cluster Kubernetes activé) ou Minikube ou K3s. 
+* **Kubectl** configuré, 
+```bash
+kubectl version
+```
 * **Istio** 1.28 installé sur le cluster (voir [Istio Docs](https://istio.io/latest/docs/setup/additional-setup/download-istio-release/)). Pour des raisons de simplicité, l'installation devra etre dans `~/istio/istio-1.28.0` (ou adaptez le script `redeploy.sh`). Puis lancez :
   ```bash
   istioctl install
@@ -102,7 +105,7 @@ Le script `setup.sh` automatise cette étape.
 ./scripts/setup.sh
 ```
 
-**Ce que fait ce script [cite: 275-285] :**
+**Ce que fait ce script :**
 
 1.  **Port-Forwarding** : Ouvre des tunnels temporaires vers Orion (:1026), IoT Agent (:4041/:7896), CrateDB (:4200) et Grafana (:3000) pour permettre l'accès et la configuration depuis votre machine locale.
 2.  **Subscription** : Crée une souscription dans Orion pour que tout changement sur un capteur soit envoyé à **QuantumLeap** pour archivage. Crée une une autre souscription pour notifier le service de classification AI à chaque mise à jour de capteur.
@@ -168,11 +171,11 @@ Le dossier `scripts/` contient tous les utilitaires nécessaires :
 
 | Script | Description |
 | :--- | :--- |
-| `./scripts/redeploy.sh` | [cite\_start]**Installation complète.** Supprime et recrée les ressources Kubernetes[cite: 268]. |
-| `./scripts/setup.sh` | [cite\_start]**Configuration logique.** Provisionne les devices et souscriptions via l'API[cite: 275]. |
-| `./scripts/start.sh` | [cite\_start]Démarre la plateforme (Scale up) et active les port-forwards[cite: 286]. |
-| `./scripts/stop.sh` | [cite\_start]Arrête la plateforme (Scale down à 0 replicas) pour économiser les ressources[cite: 287]. |
-| `./scripts/send-data.py` | [cite\_start]Simule un capteur IoT envoyant des données[cite: 272]. |
+| `./scripts/redeploy.sh` | **Installation complète.** Supprime et recrée les ressources Kubernetes. |
+| `./scripts/setup.sh` | **Configuration logique.** Provisionne les devices et souscriptions via l'API. |
+| `./scripts/start.sh` | Démarre la plateforme (Scale up) et active les port-forwards |
+| `./scripts/stop.sh` | Arrête la plateforme (Scale down à 0 replicas) pour économiser les ressources |
+| `./scripts/send-data.py` | Simule un capteur IoT envoyant des données |
 | `./scripts/cleanup.sh` | Supprime toutes les ressources du cluster (Nettoyage total). |
 | `./scripts/emptyDB.py` | Supprime toutes les données des DB Mongo(Orion) et CrateDB(Quantum Leap) (Nettoyage total). |
 | `./scripts/portManager.sh` | Gère les port-forwards (start, stop, status). |
@@ -251,5 +254,8 @@ Des outils d'IA générative ont été employés pour :
 - Générer la base de scripts d'automatisation en bash.
 - Générer la base de fichiers python pour le traitement des données.
 - Debuggage
+- README.md
+
+Toutefois, le code a été revu, corrigé et adapté manuellement pour s'assurer de son bon fonctionnement et de sa pertinence.
 
 

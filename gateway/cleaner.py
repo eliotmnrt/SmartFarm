@@ -336,7 +336,7 @@ def run_simulation():
                         print("Uniquement les premières données de chaque device sont envoyées pour éviter que CrateDB fasse n'importe quoi...")
                         initial_device_sent[device_id] = True
                         payload["state"] = "ACTIVE"
-                        payload["fieldState"] = 0
+                        payload["fieldState"] = 2  # Standard par défaut
                         payload["irrigationrecommendation"] = "NO_IRRIGATION"
                     send_to_iota(device_id, payload)
             
