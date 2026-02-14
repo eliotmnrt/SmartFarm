@@ -53,6 +53,11 @@ echo -e "${BLUE}[6/5]${NC} Démarrage de Grafana..."
 kubectl scale deployment grafana --replicas=1 -n $NAMESPACE
 wait_for_pods "grafana" 1
 
+# Démarrer Weather Agent
+echo -e "${BLUE}[7/5]${NC} Démarrage du Weather Agent..."
+kubectl scale deployment weather-agent --replicas=1 -n $NAMESPACE || true
+wait_for_pods "weather-agent" 1 || true
+
 
 echo ""
 echo -e "${GREEN}✅ Plateforme démarrée avec succès !${NC}"

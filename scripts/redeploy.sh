@@ -27,54 +27,60 @@ wait_for_pods() {
 }
 
 # 1. Namespace
-echo -e "${BLUE}[0/9]${NC} Création du namespace..."
-kubectl apply -f k8s/base/namespace.yaml
+echo -e "${BLUE}[1/11]${NC} Création du namespace..."
+kubectl apply -f ../k8s/base/namespace.yaml
 sleep 2
 
-# 7. Istio Services
-echo -e "${BLUE}[1/9]${NC} Déploiement des Services Istio..."
-kubectl apply -f k8s/istio/
+# 2. Istio
+echo -e "${BLUE}[2/11]${NC} Déploiement des Services Istio..."
+kubectl apply -f ../k8s/istio/
 sleep 10
 
-# 2. MongoDB
-echo -e "${BLUE}[2/9]${NC} Déploiement de MongoDB..."
-kubectl apply -f k8s/base/mongodb/
+# 3. MongoDB
+echo -e "${BLUE}[3/11]${NC} Déploiement de MongoDB..."
+kubectl apply -f ../k8s/base/mongodb/
 wait_for_pods "mongodb"
 
-# 3. Cratedb
-echo -e "${BLUE}[3/9]${NC} Déploiement de Cratedb..."
-kubectl apply -f k8s/base/cratedb/
+# 4. Cratedb
+echo -e "${BLUE}[4/11]${NC} Déploiement de Cratedb..."
+kubectl apply -f ../k8s/base/cratedb/
 wait_for_pods "cratedb"
 
-# 4. Orion
-echo -e "${BLUE}[4/9]${NC} Déploiement d'Orion..."
-kubectl apply -f k8s/base/orion/
+# 5. Orion
+echo -e "${BLUE}[5/11]${NC} Déploiement d'Orion..."
+kubectl apply -f ../k8s/base/orion/
 wait_for_pods "orion"
 
-# 5. QuantumLeap
-echo -e "${BLUE}[5/9]${NC} Déploiement de QuantumLeap..."
-kubectl apply -f k8s/base/quantumleap/
+# 6. QuantumLeap
+echo -e "${BLUE}[6/11]${NC} Déploiement de QuantumLeap..."
+kubectl apply -f ../k8s/base/quantumleap/
 wait_for_pods "quantumleap"
 
-# 6. IoT Agent
-echo -e "${BLUE}[6/9]${NC} Déploiement de l'IoT Agent..."
-kubectl apply -f k8s/base/iot-agent/
+# 7. IoT Agent
+echo -e "${BLUE}[7/11]${NC} Déploiement de l'IoT Agent..."
+kubectl apply -f ../k8s/base/iot-agent/
 wait_for_pods "iot-agent"
 
-#7. Grafana pod
-echo -e "${BLUE}[7/9]${NC} Création de l'utilisateur Grafana..."
-kubectl apply -f k8s/base/grafana/
+# 9. Grafana pod
+echo -e "${BLUE}[9/11]${NC} Création de l'utilisateur Grafana..."
+kubectl apply -f ../k8s/base/grafana/
 wait_for_pods "grafana"
 
-#8. AI-service
-echo -e "${BLUE}[8/9]${NC} Déploiement de l'AI-Service..."
+# 9. AI-service
+echo -e "${BLUE}[9/11]${NC} Déploiement de l'AI-Service..."
 kubectl apply -f k8s/base/ai-service/
 wait_for_pods "ai-service"
 
-#9. Decision-service
-echo -e "${BLUE}[9/9]${NC} Déploiement de la Decision-Service..."
+# 10. Decision-service
+echo -e "${BLUE}[10/11]${NC} Déploiement de la Decision-Service..."
 kubectl apply -f k8s/base/decision-service/
 wait_for_pods "decision-service"
+
+#11. Weather Agent
+echo -e "${BLUE}[11/11]${NC} Déploiement du Weather Agent..."
+kubectl apply -f k8s/base/weather-agent/
+wait_for_pods "weather-agent"
+
 
 
 if [ -f .env ]; then

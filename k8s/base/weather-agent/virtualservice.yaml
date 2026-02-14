@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: weather-agent
+  namespace: fiware-platform
+  labels:
+    app: weather-agent
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - istio-system/ingressgateway
+  http:
+    - match:
+        - uri:
+            prefix: /weather
+      route:
+        - destination:
+            host: weather-agent
+            port:
+              number: 8888
